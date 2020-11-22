@@ -43,7 +43,9 @@ class HomePlusPlant:
     async def update_topology_and_modules(self):
         await self.refresh_topology()
         await self.refresh_module_status()
+        _parse_topology_and_modules()
 
+    def _parse_topology_and_modules(self):
         # The plant modules come from two distinct elements of the topology - the ambients and the modules
         flat_modules = []
         for ambient in self.topology['plant']['ambients']:
