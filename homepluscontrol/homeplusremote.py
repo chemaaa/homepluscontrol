@@ -9,6 +9,7 @@ class HomePlusRemote(HomePlusModule):
     def __init__(self, plant, id, name, hw_type, device, fw='', type='', reacheable = False):
         super().__init__(plant, id, name, hw_type, device, fw, type, reacheable)
         self.battery = ''
+        self.build_status_url(HomePlusRemote.MODULE_BASE_URL)
 
     def __str__(self):
         return f'Home+ Remote: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, battery->{self.battery}'
