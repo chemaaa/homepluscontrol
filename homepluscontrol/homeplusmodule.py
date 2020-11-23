@@ -1,7 +1,7 @@
-import time
-from .authentication import EliotOAuth2
-import json
 import aiohttp
+import json
+import logging
+import time
 
 class HomePlusModule:
     """Base Class representing a "module", i.e a Home+ device such as a plug, a light or a remote"""
@@ -21,6 +21,10 @@ class HomePlusModule:
     def __str__(self):
         return f'Home+ Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}'
 
+    def logger(self):
+        """Return logger."""
+        return logging.getLogger(__name__)
+
     def build_status_url(self, base_url):
         self.statusUrl = base_url + self.plant.id + '/modules/parameter/id/value/' + self.id
 
@@ -30,7 +34,7 @@ class HomePlusModule:
         try:        
             response = await oauth_client.get_request(self.statusUrl)
         except aiohttp.ClientResponseError as err:
-            print(err)
+            logger.exception("HTTP client response error when update module status")
         else:            
             status_result = await response.json()        
             module_key = list(status_result)[0]

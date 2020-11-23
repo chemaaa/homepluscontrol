@@ -1,119 +1,21 @@
-import logging
-from requests_oauthlib import OAuth2Session
-from oauthlib.oauth2 import TokenExpiredError
 from aiohttp import ClientSession, ClientResponse
 import asyncio
-from yarl import URL
-import secrets
 import jwt
-from typing import Any, Awaitable, Callable, Dict, Optional, cast
+import logging
 import re
+import secrets
 import time
+from typing import Any, Optional, cast
+from yarl import URL
 
-# Common definitions
-AUTH_BASE_URL = 'https://partners-login.eliotbylegrand.com/authorize'
-TOKEN_URL = REFRESH_URL = 'https://partners-login.eliotbylegrand.com/token'
-
-class EliotOAuth2:
-    """
-    Handle authentication with OAuth2 - Synchronous Requests
-    """
-
-    def __init__(self, 
-                 client_id, 
-                 client_secret, 
-                 subscription_key,  
-                 token=None,
-                 redirect_uri=None,
-                 token_updater=None,
-                ):
-
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.subscription_key = subscription_key
-        self.token = token
-        self.redirect_uri = redirect_uri
-        self.token_updater = token_updater
-
-        self.extra = {"client_id": self.client_id, "client_secret": self.client_secret}
-        self._subscription_header = { 'Ocp-Apim-Subscription-Key' : self.subscription_key }
-        token_type = 'Bearer'
-
-        self.oauth_client = OAuth2Session(
-            client_id=self.client_id,
-            token=token,
-            token_updater=self.token_updater,
-            redirect_uri=self.redirect_uri,
-            auto_refresh_url=REFRESH_URL, 
-            auto_refresh_kwargs=self.extra,
-        )
-    
-    @property
-    def logger(self) -> logging.Logger:
-        """Return logger."""
-        return logging.getLogger(__name__)
-
-    def refresh_tokens(self):
-        """Refresh and return new access token"""
-        self.logger.info("Access token is refreshing")
-        self.token = self.oauth_client.refresh_token(REFRESH_URL, **self.extra)        
-        if self.token_updater != None:
-            self.token_updater(self.token)
-        return self.token
-
-    def request(self, method, url, **kwargs):
-        """ Make an authenticated HTTP request """
-        # Add the mandatory subscription key header to the request
-        if 'headers' in kwargs:
-            kwargs['headers'] = { **kwargs['headers'], **self._subscription_header }
-        else:
-            kwargs['headers'] = self._subscription_header
-        try:
-            return getattr(self.oauth_client, method)(url, **kwargs)
-        except TokenExpiredError:
-            self.logger.info("Request attempted on an expired token. Need to refresh.")
-            print("Request attempted on an expired token. Need to refresh.")
-            self.token = self.refresh_tokens()
-            self.oauth_client.token = self.token
-            return getattr(self.oauth_client, method)(url, **kwargs)
-    
-    def get_request(self, url, **kwargs):
-        r = self.request('get', url, **kwargs)
-        r.raise_for_status()
-        return r
-
-    def post_request(self, url, data, **kwargs):
-        kwargs['data'] = data
-        r = self.request('post', url, **kwargs)
-        r.raise_for_status()
-        return r
-
-    def get_authorization_url(self):
-        return self.oauth_client.authorization_url(AUTH_BASE_URL)
-
-    def fetch_token(self, authorization_response=None):
-        """
-        Generic method for fetching an Eliot access token.
-        :param authorization_response: Authorization response URL, the callback
-                                       URL of the request back to you.
-        :param code: Authorization code
-        :return: A token dict
-        """
-        self.token = self.oauth_client.fetch_token(
-            TOKEN_URL,
-            authorization_response=authorization_response,
-            client_secret=self.client_secret,
-            include_client_id=True,
-        )
-        if self.token_updater != None:
-            self.token_updater(self.token)
-        return self.token
-
-
-class EliotOAuth2Async:
+class HomePlusOAuth2Async:
     """
     Handle authentication with OAuth2 - Asynchronous Requests
     """
+
+    # Common URLs
+    AUTH_BASE_URL = 'https://partners-login.eliotbylegrand.com/authorize'
+    TOKEN_URL = REFRESH_URL = 'https://partners-login.eliotbylegrand.com/token'
 
     def __init__(self, 
                  client_id, 
@@ -211,7 +113,7 @@ class EliotOAuth2Async:
     def generate_authorize_url(self) -> str:
         """Generate a url for the user to authorize."""
         return str(
-            URL(AUTH_BASE_URL)
+            URL(HomePlusOAuth2Async.AUTH_BASE_URL)
             .with_query(
                 {
                     "response_type": "code",
@@ -225,7 +127,9 @@ class EliotOAuth2Async:
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
         if self.valid_token:
+            self.logger.debug("Token is still valid")
             return
+        self.logger.debug("Token is no longer valid so refreshing")
         return await self._async_refresh_token(self.token)
 
     async def async_fetch_initial_token(self, redirect_url: Any) -> dict:

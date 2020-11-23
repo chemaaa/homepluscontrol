@@ -1,6 +1,7 @@
-import json
 import aiohttp
-from .authentication import EliotOAuth2Async
+import json
+import logging
+from .authentication import HomePlusOAuth2Async
 from .homeplusmodule import HomePlusModule
 from .homepluslight import HomePlusLight
 from .homeplusplug import HomePlusPlug
@@ -12,7 +13,7 @@ PLANT_TOPOLOGY_RESOURCE='/topology'
 class HomePlusPlant:
     """Class representing a "plant", i.e a Home or Environment containing Home+ devices"""
 
-    def __init__(self, id, name, country, oauth_client: EliotOAuth2Async):
+    def __init__(self, id, name, country, oauth_client: HomePlusOAuth2Async):
         self.id = id
         self.name = name
         self.country = country
@@ -22,12 +23,16 @@ class HomePlusPlant:
     def __str__(self):
         return f'Home+ Plant: name->{self.name}, id->{self.id}, country->{self.country}'
 
+    def logger(self):
+        """Return logger."""
+        return logging.getLogger(__name__)
+
     async def refresh_topology(self):
         self.topology = json.loads('{"plant": { } }')
         try:        
              response = await self.oauth_client.get_request(PLANT_TOPOLOGY_BASE_URL + self.id + PLANT_TOPOLOGY_RESOURCE)
         except aiohttp.ClientResponseError as err:
-            print(err)
+            logger.exception("HTTP client response error when refreshing plant topology")
         else:
             self.topology = await response.json()
 
@@ -36,14 +41,14 @@ class HomePlusPlant:
         try:        
              response = await self.oauth_client.get_request(PLANT_TOPOLOGY_BASE_URL + self.id)
         except aiohttp.ClientResponseError as err:
-            print(err)
+            logger.exception("HTTP client response error when refreshing module status")
         else:
             self.module_status = await response.json()
 
     async def update_topology_and_modules(self):
         await self.refresh_topology()
         await self.refresh_module_status()
-        _parse_topology_and_modules()
+        self._parse_topology_and_modules()
 
     def _parse_topology_and_modules(self):
         # The plant modules come from two distinct elements of the topology - the ambients and the modules

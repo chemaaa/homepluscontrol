@@ -1,5 +1,4 @@
 from .homeplusinteractivemodule import HomePlusInteractiveModule
-from .authentication import EliotOAuth2
 
 class HomePlusLight(HomePlusInteractiveModule):
     """Home+ Light Module"""

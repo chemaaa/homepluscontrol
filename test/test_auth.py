@@ -15,7 +15,7 @@ def test_token_validity():
                 "expires_in" : -1,
                 "expires_on" : time.time() - 1}
         # Test for expired token
-        client = authentication.EliotOAuth2Async(client_id = client_id,
+        client = authentication.HomePlusOAuth2Async(client_id = client_id,
                                                 client_secret = client_secret,
                                                 subscription_key = subscription_key,
                                                 redirect_uri = redirect_uri,
@@ -38,7 +38,7 @@ def test_generation_auth_url():
                 "expires_in" : -1,
                 "expires_on" : time.time() + 500}
         # Test for expired token
-        client = authentication.EliotOAuth2Async(client_id = client_id,
+        client = authentication.HomePlusOAuth2Async(client_id = client_id,
                                                 client_secret = client_secret,
                                                 subscription_key = subscription_key,
                                                 redirect_uri = redirect_uri,
@@ -57,7 +57,7 @@ def test_split_redirect_url():
                 "expires_in" : -1,
                 "expires_on" : time.time() + 500}
         # Test for expired token
-        client = authentication.EliotOAuth2Async(client_id = client_id,
+        client = authentication.HomePlusOAuth2Async(client_id = client_id,
                                                 client_secret = client_secret,
                                                 subscription_key = subscription_key,
                                                 redirect_uri = redirect_uri,
@@ -80,7 +80,7 @@ def test_decode_state():
                 "expires_in" : -1,
                 "expires_on" : time.time() + 500}
         # Test for expired token
-        client = authentication.EliotOAuth2Async(client_id = client_id,
+        client = authentication.HomePlusOAuth2Async(client_id = client_id,
                                                 client_secret = client_secret,
                                                 subscription_key = subscription_key,
                                                 redirect_uri = redirect_uri,
