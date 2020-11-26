@@ -166,7 +166,7 @@ class HomePlusOAuth2Async:
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
 
-        resp = await self.oauth_client.post(TOKEN_URL, data=data)
+        resp = await self.oauth_client.post(HomePlusOAuth2Async.TOKEN_URL, data=data)
         resp.raise_for_status()
         
         self.token = cast(dict, await resp.json())
