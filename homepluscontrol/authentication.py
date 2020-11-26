@@ -9,11 +9,19 @@ from typing import Any, Optional, cast
 from yarl import URL
 
 class HomePlusOAuth2Async:
-    """
-    Handle authentication with OAuth2 - Asynchronous Requests
+    """ Handles authentication with OAuth2 - Uses aiohttp for asynchronous requests.
+
+    Attributes:
+        client_id (str): Client identifier assigned by the API provider when registering an app
+        client_secret (str): Client secret assigned by the API provider when registering an app
+        subscription_key (str): Subscription key obtained from the API provider
+        token (dict): oauth2 token used by this authentication instance
+        redirect_uri (str): URL for the redirection from the authentication provider
+        token_update (function): function that is called when a new token is obtained from the authentication provider
+        oauth_client (:obj:`ClientSession`): aiohttp ClientSession object that handles HTTP async requests
     """
 
-    # Common URLs
+    # Authentication URLs for Legrant Home+ Control API
     AUTH_BASE_URL = 'https://partners-login.eliotbylegrand.com/authorize'
     TOKEN_URL = REFRESH_URL = 'https://partners-login.eliotbylegrand.com/token'
 
@@ -25,7 +33,16 @@ class HomePlusOAuth2Async:
                  redirect_uri=None,
                  token_updater=None,
                 ):
-
+        """ HomePlusOAuth2Async Constructor.
+            
+        Args:
+            client_id (str): Client identifier assigned by the API provider when registering an app
+            client_secret (str): Client secret assigned by the API provider when registering an app
+            subscription_key (str): Subscription key obtained from the API provider
+            token (dict, optional): oauth2 token used by this authentication instance. Defaults to None.
+            redirect_uri (str, optional): URL for the redirection from the authentication provider. Defaults to None
+            token_update (function): function that is called when a new token is obtained from the authentication provider. Defaults to None
+        """
         self.client_id = client_id
         self.client_secret = client_secret
         self.subscription_key = subscription_key
@@ -35,41 +52,69 @@ class HomePlusOAuth2Async:
         self.redirect_uri = redirect_uri
         self.token_updater = token_updater
 
-        self.extra = {"client_id": self.client_id, "client_secret": self.client_secret}
-        self._subscription_header = { 'Ocp-Apim-Subscription-Key' : self.subscription_key }
-        self.token_type = 'Bearer'
-        self.secret = secrets.token_hex()
-        self.state = secrets.token_hex()
+        self._subscription_header = { 'Ocp-Apim-Subscription-Key' : self.subscription_key }    
+        self._secret = secrets.token_hex()  # Used in JWT encode/decode
+        self._state = secrets.token_hex()   # State string for token request
 
         self.oauth_client = ClientSession()
     
     @property
     def logger(self) -> logging.Logger:
-        """Return logger."""
+        """Logger of authentication module."""
         return logging.getLogger(__name__)
     
     @property
     def valid_token(self) -> bool:
-        """Return if token is still valid."""
+        """Current validity of the Oauth token (i.e. it has not expired).
+
+        Return: 
+            True if the token is valid, False otherwise
+        """
         expires_on = float(self.token["expires_on"])
         current_time = time.time()
         return (
              expires_on > current_time
         )
     
-    def _encode_jwt(self, data: str) -> str:
-        """JWT encode data."""        
-        return jwt.encode(data, self.secret, algorithm="HS256").decode()
+    def _encode_jwt(self, data: dict) -> str:
+        """JWT encode data - relies on PyJWT.
+                
+        Args:
+            data (dict): Dictionary containing the data that is to be encoded
+
+        Returns:
+            str: String of the encoded data.
+
+        """        
+        return jwt.encode(data, self._secret, algorithm="HS256").decode()
 
     def _decode_jwt(self, encoded: str) -> Optional[dict]:
-        """JWT encode data."""
-        secret = cast(str, self.secret)
+        """JWT decode data - relies on PyJWT.
+        
+        Args:
+            encoded (str): Encoded string that is to be decoded
+
+        Returns:
+            dict: Dictionary of the decoded token or None if there is an error during the decoding process.
+
+        """
+        secret = cast(str, self._secret)
         try:
             return jwt.decode(encoded, secret, algorithms=["HS256"])
         except jwt.InvalidTokenError:
             return None
 
     def _split_redirect_url(self, redirect_url):
+        """ Splits the redirect URL to extract code and state parameters. 
+
+        Used for the initial token request.
+
+            Args:
+                redirect_url (str): The redirect URL to be split
+
+            Returns:
+                dict: code and state values in a dictionary
+        """
         code_pattern = 'code=(.*)&'
         match = re.search(code_pattern, redirect_url)
         if match:
@@ -85,7 +130,14 @@ class HomePlusOAuth2Async:
         return { **code, **state }
 
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens."""
+        """ Refresh the access token.
+        
+        Args:
+            token (dict): Token to be updated
+
+        Returns:
+            dict: Token dictionary with the new access token and expiration times
+        """
         new_token = await self._token_request(
             {
                 "grant_type": "refresh_token",
@@ -96,7 +148,19 @@ class HomePlusOAuth2Async:
         return {**token, **new_token}
 
     async def _token_request(self, data: dict) -> dict:
-        """Make a token request."""
+        """ Make an HTTP POST request for a token.
+
+        This method will call the token updater method if it exists.
+
+        Arg:
+            data (dict): Dictionary of the POST body parameters
+
+        Returns:
+            dict: Token dictionary returned by the API
+
+        Raises:
+            HTTP status error exceptions
+        """
         data["client_id"] = self.client_id
 
         if self.client_secret is not None:
@@ -111,7 +175,12 @@ class HomePlusOAuth2Async:
         return self.token
 
     def generate_authorize_url(self) -> str:
-        """Generate a url for the user to authorize."""
+        """Generate the URL for the user to authorize the app.
+
+        Returns:
+            str: The URL that is used for the authorization step.
+        
+        """
         return str(
             URL(HomePlusOAuth2Async.AUTH_BASE_URL)
             .with_query(
@@ -119,13 +188,20 @@ class HomePlusOAuth2Async:
                     "response_type": "code",
                     "client_id": self.client_id,
                     "redirect_uri": self.redirect_uri,
-                    "state": self._encode_jwt( {"state": self.state} ),
+                    "state": self._encode_jwt( {"state": self._state} ),
                 }
             )
         )
 
     async def async_ensure_token_valid(self) -> None:
-        """Ensure that the current token is valid."""
+        """Ensures that the access token is valid.
+        
+        If the token is no longer valid, then a new one is requested and the object attribute updated.
+        If the token is still valid, then do nothing.
+
+        Returns:
+            dict: Dictionary of the new token. The object attribute that holds the token is also updated.
+        """
         if self.valid_token:
             self.logger.debug("Token is still valid")
             return
@@ -133,10 +209,20 @@ class HomePlusOAuth2Async:
         return await self._async_refresh_token(self.token)
 
     async def async_fetch_initial_token(self, redirect_url: Any) -> dict:
-        """Resolve the authorization code to tokens."""
+        """Fetches the initial access and refresh tokens once the authorization step was completed.
+
+        This method relies on the redirect URL that was provided by the API once authorization was approved.
+
+        Args:
+            redirect_url (str): The redirect URL that was provided by the API after authorizing.
+
+        Returns:
+            dict: Dictionary of the new token. The object attribute that holds the token is also updated.
+        
+        """
         req_body = self._split_redirect_url(redirect_url)
 
-        if req_body != None and req_body["state"] == self.state:
+        if req_body != None and req_body["state"] == self._state:
             return await self._token_request(
                 {
                     "grant_type": "authorization_code",
@@ -145,7 +231,22 @@ class HomePlusOAuth2Async:
             )
     
     async def request(self, method, url, **kwargs):
-        """ Make an authenticated HTTP request """
+        """ Makes an authenticated async HTTP request.
+        
+        This method wraps around the aiohttp request method and adds the mandatory subscription key header
+        that is required by the Home + Control API calls.
+
+        Args:
+            method (str): HTTP method to be used in the request (get, post, put, delete)
+            url (str): Endpoint of the HTTP request
+            **kwargs (dict): Keyword arguments that will be forwarded to the aiohttp request handler
+
+        Returns:
+            ClientResponse: aiohttp response object
+
+        Raises:
+            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+        """
         await self.async_ensure_token_valid()
 
         # Add the mandatory subscription key header to the request
@@ -158,11 +259,40 @@ class HomePlusOAuth2Async:
         return await self.oauth_client.request(method, url, **kwargs)
     
     async def get_request(self, url, **kwargs):
+        """ Makes an authenticated async HTTP GET request.
+        
+        Shortcut method that relies on `request()` call and simply hardcodes the 'get' HTTP method
+
+        Args:
+            url (str): Endpoint of the HTTP request
+            **kwargs(dict): Keyword arguments that will be forwarded to the aiohttp request handler
+
+        Returns:
+            ClientResponse: aiohttp response object
+
+        Raises:
+            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+        """
         r = await self.request('get', url, **kwargs)
         r.raise_for_status()
         return r
 
     async def post_request(self, url, data, **kwargs):
+        """ Makes an authenticated async HTTP POST request.
+        
+        Shortcut method that relies on `request()` call and simply hardcodes the 'post' HTTP method
+
+        Args:
+            url (str): Endpoint of the HTTP request
+            data (dict): Dictionary containing the parameters to be passed in the POST request body
+            **kwargs (dict): Keyword arguments that will be forwarded to the aiohttp request handler
+
+        Returns:
+            ClientResponse: aiohttp response object
+
+        Raises:
+            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+        """
         kwargs['data'] = data
         r = await self.request('post', url, **kwargs)
         r.raise_for_status()
