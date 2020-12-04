@@ -1,6 +1,7 @@
 import asyncio
 from aioresponses import aioresponses
 import pytest
+import re
 import time
 from homepluscontrol import authentication, homeplusplant, homeplusmodule, homeplusplug, homepluslight, homeplusremote
 
@@ -386,6 +387,17 @@ def mock_aioresponse(plant_data,
 
         yield mock
 
+@pytest.fixture()
+def error_aioresponse():
+    pattern = re.compile(r'^https://api.developer.legrand.com/hc.*$')
+    with aioresponses() as mock:
+        mock.get(pattern, status=400)  # Invalid arguments
+        mock.get(pattern, status=403)  # Operation forbidden
+        mock.get(pattern, status=404)  # Not found
+        mock.get(pattern, status=406)  # Request not acceptable
+        mock.get(pattern, status=500)  # Internal error
+        yield mock
+    
 @pytest.fixture()
 def test_plant(test_client):
     return homeplusplant.HomePlusPlant(id = "mock_plant_1",
