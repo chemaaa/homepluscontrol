@@ -19,8 +19,8 @@ sys.setrecursionlimit(1500)
 # -- Project information -----------------------------------------------------
 
 project = 'Home + Control'
-copyright = '2020, Jose Aragon'
-author = 'Jose Aragon'
+copyright = '2020, chemaaa'
+author = 'chemaaa'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'

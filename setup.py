@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="chemaaa",
     author_email="chemaaar@gmail.com",
-    description="Python-based API to interact with the Legrand Eliot Home + Control interface",
+    description="Python-based API to interact with the Legrand Home + Control interface",
     long_description=long_description,
     long_description_ctontent_type="text/markdown",
     url="https://github.com/chemaaa/homepluscontrol",
