@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 .vscode/launch.json
 access_token
+__main__.py

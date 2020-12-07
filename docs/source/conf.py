@@ -14,6 +14,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
 sys.setrecursionlimit(1500)
+import homepluscontrol
 
 
 # -- Project information -----------------------------------------------------
@@ -23,7 +24,8 @@ copyright = '2020, chemaaa'
 author = 'chemaaa'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = homepluscontrol.version
+version = '.'.join(release.split('.')[:2])
 
 
 # -- General configuration ---------------------------------------------------
