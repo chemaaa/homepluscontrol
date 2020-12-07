@@ -30,6 +30,13 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3.0",
         "Operating System :: OS Independent",
+        "Development Status :: 3 - Alpha",
+        "Framework :: AsyncIO",
+        "Framework :: Pytest",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "Topic :: Home Automation",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     python_requires='>=3.8.5',
     install_requires=[
