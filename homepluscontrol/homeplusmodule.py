@@ -46,6 +46,7 @@ class HomePlusModule:
         """ Return the string representing this module """
         return f'Home+ Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}'
 
+    @property
     def logger(self):
         """ Return logger of the Home+ Control Module """
         return logging.getLogger(__name__)
@@ -71,7 +72,7 @@ class HomePlusModule:
         try:        
             response = await oauth_client.get_request(self.statusUrl)
         except aiohttp.ClientResponseError as err:
-            logger.exception("HTTP client response error when update module status")
+            self.logger.error("HTTP client response error when update module status")
         else:            
             status_result = await response.json()        
             module_key = list(status_result)[0]

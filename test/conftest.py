@@ -139,6 +139,80 @@ def plant_topology():
     }   
     """
 
+# Change in the plant topology
+@pytest.fixture()
+def plant_topology_reduced():
+    return """
+    {
+    "plant": {
+        "id": "123456789009876543210",
+        "ambients": [
+                        {
+                "id": "000000032345678fedcba",
+                "name": "Master Bedroom",
+                "type": "bedroom",
+                "modules": [
+                    {
+                        "id": "0000000887654321fedcba",
+                        "name": "Bedroom Wall Outlet",
+                        "hw_type": "NLP",
+                        "type": "other",
+                        "device": "plug"
+                    }
+                ]
+            },
+            {
+                "id": "000000042345678fedcba",
+                "name": "Living Room",
+                "type": "livingroom",
+                "modules": [
+                    {
+                        "id": "0000000787654321fedcba",
+                        "name": "Living Room Ceiling Light",
+                        "hw_type": "NLF",
+                        "device": "light"
+                    }
+                ]
+            },
+            {
+                "id": "000000052345678fedcba",
+                "name": "Dining Room",
+                "type": "dining_room",
+                "modules": [
+                    {
+                        "id": "0000000687654321fedcba",
+                        "name": "Dining Room Ceiling Light",
+                        "hw_type": "NLF",
+                        "device": "light"
+                    },
+                    {
+                        "id": "0000000587654321fedcba",
+                        "name": "Dining Room Wall Outlet",
+                        "hw_type": "NLP",
+                        "type": "other",
+                        "device": "plug"
+                    }
+                ]
+            }
+        ],
+        "modules": [
+            {
+                "id": "000000012345678abcdef",
+                "name": "General Command",
+                "hw_type": "NLT",
+                "device": "remote"
+            },
+            {
+                "id": "000000022345678abcdef",
+                "name": "Wall Switch 1",
+                "hw_type": "NLT",
+                "device": "remote"
+            }
+        ]
+    }
+    }   
+    """
+
 @pytest.fixture()
 def plant_modules():
     return """
@@ -288,6 +362,125 @@ def plant_modules():
     }
     """
 
+# Change the module status response
+@pytest.fixture()
+def plant_modules_reduced():
+    return """
+    {
+    "modules": {
+        "lights": [
+            {
+                "reachable": true,
+                "status": "off",
+                "fw": 46,
+                "consumptions": [
+                    {
+                        "unit": "watt",
+                        "value": 0,
+                        "timestamp": "2020-11-22T11:03:05+00:00"
+                    }
+                ],
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "0000000787654321fedcba"
+                        }
+                    }
+                }
+            },
+            {
+                "reachable": true,
+                "status": "off",
+                "fw": 46,
+                "consumptions": [
+                    {
+                        "unit": "watt",
+                        "value": 0,
+                        "timestamp": "2020-11-22T11:03:05+00:00"
+                    }
+                ],
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "0000000687654321fedcba"
+                        }
+                    }
+                }
+            }
+        ],
+        "plugs": [
+            {
+                "reachable": true,
+                "status": "on",
+                "consumptions": [
+                    {
+                        "unit": "watt",
+                        "value": 0,
+                        "timestamp": "2020-11-22T11:03:05+00:00"
+                    }
+                ],
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "0000000887654321fedcba"
+                        }
+                    }
+                },
+                "fw": 42
+            },
+            {
+                "reachable": true,
+                "status": "on",
+                "consumptions": [
+                    {
+                        "unit": "watt",
+                        "value": 0,
+                        "timestamp": "2020-11-22T11:03:05+00:00"
+                    }
+                ],
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "0000000587654321fedcba"
+                        }
+                    }
+                },
+                "fw": 42
+            }
+        ],
+        "automations": [],
+        "energymeters": [],
+        "remotes": [
+            {
+                "reachable": false,
+                "battery": "full",
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "000000012345678abcdef"
+                        }
+                    }
+                },
+                "fw": 36
+            },
+            {
+                "reachable": true,
+                "battery": "full",
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "000000022345678abcdef"
+                        }
+                    }
+                },
+                "fw": 36
+            }
+        ],
+        "heaters": []
+    }
+    }
+    """
+
 @pytest.fixture()
 def plug_status():
     return """
@@ -385,6 +578,16 @@ def mock_aioresponse(plant_data,
 
         mock.get('https://api.developer.legrand.com/hc/api/v1.0/remote/remote/addressLocation/plants/123456789009876543210/modules/parameter/id/value/000000012345678abcdef', status=200, body=remote_status)
 
+        # Second set of calls
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
+
+        # Third set of calls
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
+
         yield mock
 
 @pytest.fixture()
@@ -444,3 +647,50 @@ def test_remote(test_plant):
                                        device = "Remote",
                                        fw = "FW4",
                                        type = "Remote Module Type")
+
+@pytest.fixture()
+def mock_reduced_aioresponse(plant_data, 
+                     plant_modules, 
+                     plant_topology,
+                     plant_topology_reduced,
+                     plant_modules_reduced):
+    with aioresponses() as mock:
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
+
+        # Second set of calls with reduced topology
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules_reduced)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology_reduced)
+
+        yield mock
+
+@pytest.fixture()
+def mock_growing_aioresponse(plant_data, 
+                     plant_modules, 
+                     plant_topology,
+                     plant_topology_reduced,
+                     plant_modules_reduced):
+    with aioresponses() as mock:
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules_reduced)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology_reduced)
+
+        # Second set of calls with reduced topology
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
+
+        yield mock        
+
+@pytest.fixture()
+def partial_error_aioresponse(plant_data, 
+                            plant_modules, 
+                            plant_topology):
+    with aioresponses() as mock:
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
+        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=500)
+
+        yield mock
