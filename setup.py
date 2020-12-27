@@ -65,7 +65,7 @@ setuptools.setup(
         'py>=1.9.0',
         'pycparser>=2.20',
         'Pygments>=2.7.2',
-        'PyJWT>=1.7.1',
+        'PyJWT==1.7.1',
         'pyparsing>=2.4.7',
         'pytest>=6.1.2',
         'pytest-cov>=2.10.1',
