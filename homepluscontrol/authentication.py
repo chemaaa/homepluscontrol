@@ -32,6 +32,7 @@ class HomePlusOAuth2Async:
                  token=None,
                  redirect_uri=None,
                  token_updater=None,
+                 oauth_client=None,
                 ):
         """ HomePlusOAuth2Async Constructor.
             
@@ -42,6 +43,7 @@ class HomePlusOAuth2Async:
             token (dict, optional): oauth2 token used by this authentication instance. Defaults to None.
             redirect_uri (str, optional): URL for the redirection from the authentication provider. Defaults to None
             token_update (function): function that is called when a new token is obtained from the authentication provider. Defaults to None
+            oauth_client (ClientSession): aiohttp client session that handles asynchronous HTTP requests. If not specified, a new one is created. Defaults to None.
         """
         self.client_id = client_id
         self.client_secret = client_secret
@@ -56,7 +58,10 @@ class HomePlusOAuth2Async:
         self._secret = secrets.token_hex()  # Used in JWT encode/decode
         self._state = secrets.token_hex()   # State string for token request
 
-        self.oauth_client = ClientSession()
+        if oauth_client is None:
+            self.oauth_client = ClientSession()
+        else:
+            self.oauth_client = oauth_client
     
     @property
     def logger(self) -> logging.Logger:
