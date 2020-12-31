@@ -134,10 +134,14 @@ class HomePlusPlant:
                 self._create_module(module)
 
         # Check if any module should no longer be in this plant's dict
+        modules_to_pop = []
         for existing_id in self.modules.keys():
             if existing_id in input_module_ids:
                 continue
-            self.modules.pop(existing_id, None)            
+            modules_to_pop.append(existing_id)
+
+        for m in modules_to_pop:           
+            self.modules.pop(m, None)            
 
     def _parse_module_status(self):
         """ Auxiliary method to parse the module status data returned by the API. 
