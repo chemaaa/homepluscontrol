@@ -76,7 +76,7 @@ class HomePlusInteractiveModule(HomePlusModule):
         try:        
             response = await oauth_client.post_request(self.statusUrl, data=desired_end_status)
         except aiohttp.ClientResponseError as err:
-            logger.exception("HTTP client response error when posting module status")
+            self.logger.error("HTTP client response error when posting module status")
         else:
             update_status_result = True        
         return update_status_result
