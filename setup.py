@@ -39,7 +39,7 @@ setuptools.setup(
         "Topic :: Home Automation",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires='>=3.8.5',
+    python_requires='>=3.6',
     install_requires=[
         'aiohttp==3.7.1',
         'aioresponses>=0.7.1',
