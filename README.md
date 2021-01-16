@@ -22,7 +22,7 @@ calls to each module.
 ## Authentication
 The *Legrand Home + Control* API uses Oauth2 authentication, so you must first register an account at https://developer.legrand.com/. 
 
-Once registered, you will then need to create a subscrption to the *Starter Kit* (currently the only subscription available) and this will
+Once registered, you will then need to create a subscription to the *Starter Kit* (currently the only subscription available) and this will
 generate your SUBSCRIPTION_KEY.
 
 As a final step, you will have to register an Application, where you will have to define a name, a redirect URL and the scopes of your application
@@ -87,7 +87,7 @@ async def interact_with_api():
     # to interact with the API.
     
     # First get the plant information
-    result = await client.request('get', protected_url)
+    result = await client.request('get', api_plant_url)
     plant_info = await result.json()
     print(plant_info)
     plant_array = []
