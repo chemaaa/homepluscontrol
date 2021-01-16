@@ -1,9 +1,12 @@
-from aioresponses import aioresponses
 import asyncio
-from aiohttp import ClientResponseError
-from homepluscontrol import authentication, homeplusplant, homeplusmodule, homeplusplug, homepluslight, homeplusremote
-import pytest
 import time
+
+import pytest
+from aiohttp import ClientResponseError
+from aioresponses import aioresponses
+
+from homepluscontrol import (authentication, homepluslight, homeplusmodule,
+                             homeplusplant, homeplusplug, homeplusremote)
 
 # Integration tests
 

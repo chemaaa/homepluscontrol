@@ -1,7 +1,9 @@
-import aiohttp
 import json
 import logging
 import time
+
+import aiohttp
+
 
 class HomePlusModule:
     """Base Class representing a "module", i.e a Home+ device such as a plug, a light or a remote.

@@ -1,5 +1,6 @@
 from .homeplusmodule import HomePlusModule
 
+
 class HomePlusRemote(HomePlusModule):
     """Class that represents a Home+ Remote Module, i.e. a switch that is wireless and configured 
     to control specific modules in the plant

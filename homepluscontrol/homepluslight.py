@@ -1,5 +1,6 @@
 from .homeplusinteractivemodule import HomePlusInteractiveModule
 
+
 class HomePlusLight(HomePlusInteractiveModule):
     """Class that represents a Home+ Light Module.
     

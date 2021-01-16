@@ -1,6 +1,7 @@
 import asyncio
-from homepluscontrol import authentication
 import time
+
+from homepluscontrol import authentication
 
 client_id = "client_identifier"
 client_secret = "client_secret"

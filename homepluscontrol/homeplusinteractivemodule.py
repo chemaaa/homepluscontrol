@@ -1,6 +1,9 @@
-import aiohttp
 import logging
+
+import aiohttp
+
 from .homeplusmodule import HomePlusModule
+
 
 class HomePlusInteractiveModule(HomePlusModule):
     """Base Class for Home+ modules that are interactive, i.e a Home+ device that accepts commands to update 

@@ -1,5 +1,6 @@
 import setuptools
 from setuptools.command.test import test as TestCommand
+
 import homepluscontrol
 
 with open("README.md", "r") as fh:

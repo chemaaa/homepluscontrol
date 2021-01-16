@@ -1,5 +1,6 @@
 from .homeplusinteractivemodule import HomePlusInteractiveModule
 
+
 class HomePlusPlug(HomePlusInteractiveModule):
     """Class that represents a Home+ Plug Module, i.e. electrical socket.
     
