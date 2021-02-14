@@ -1,9 +1,14 @@
 import asyncio
-from homepluscontrol import authentication, homeplusplant, homeplusmodule, homeplusinteractivemodule, homeplusplug, homepluslight, homeplusremote
 import json
-from . import conftest
-from aioresponses import aioresponses
 import time
+
+from aioresponses import aioresponses
+
+from homepluscontrol import (authentication, homeplusinteractivemodule,
+                             homepluslight, homeplusmodule, homeplusplant,
+                             homeplusplug, homeplusremote)
+
+from . import conftest
 
 
 def setup_mock_plant(mock_aioresponse, test_client):

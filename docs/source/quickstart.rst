@@ -47,7 +47,7 @@ The following script is a simple example of how this Python library can be used:
     
     # This function will now handle the asynchronous calls to the API
     async def interact_with_api():
-        token = await client.async_fetch_initial_token(return_url)
+        token = await client.async_fetch_initial_token(api_plant_url)
         print(token)
         # The client now has a valid token and can be used 
         # to interact with the API.

@@ -1,12 +1,14 @@
-from aiohttp import ClientSession, ClientResponse
 import asyncio
-import jwt
 import logging
 import re
 import secrets
 import time
 from typing import Any, Optional, cast
+
+import jwt
+from aiohttp import ClientResponse, ClientSession
 from yarl import URL
+
 
 class HomePlusOAuth2Async:
     """ Handles authentication with OAuth2 - Uses aiohttp for asynchronous requests.

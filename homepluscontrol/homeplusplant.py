@@ -1,9 +1,11 @@
-import aiohttp
 import json
 import logging
+
+import aiohttp
+
 from .authentication import HomePlusOAuth2Async
-from .homeplusmodule import HomePlusModule
 from .homepluslight import HomePlusLight
+from .homeplusmodule import HomePlusModule
 from .homeplusplug import HomePlusPlug
 from .homeplusremote import HomePlusRemote
 

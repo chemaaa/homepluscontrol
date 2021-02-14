@@ -1,9 +1,12 @@
 import asyncio
-from aioresponses import aioresponses
-import pytest
 import re
 import time
-from homepluscontrol import authentication, homeplusplant, homeplusmodule, homeplusplug, homepluslight, homeplusremote
+
+import pytest
+from aioresponses import aioresponses
+
+from homepluscontrol import (authentication, homepluslight, homeplusmodule,
+                             homeplusplant, homeplusplug, homeplusremote)
 
 # Test fixtures
 client_id = "client_identifier"
