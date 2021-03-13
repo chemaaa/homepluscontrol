@@ -38,3 +38,7 @@ Home + Remote (Wireless Switch)
 .. automodule:: homepluscontrol.homeplusremote
    :members:
 
+Home + API
+-------------------------------
+.. automodule:: homepluscontrol.homeplusapi
+   :members:

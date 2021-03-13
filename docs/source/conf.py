@@ -20,7 +20,7 @@ import homepluscontrol
 # -- Project information -----------------------------------------------------
 
 project = 'Home + Control'
-copyright = '2020, chemaaa'
+copyright = '2021, chemaaa'
 author = 'chemaaa'
 
 # The full version, including alpha/beta/rc tags
