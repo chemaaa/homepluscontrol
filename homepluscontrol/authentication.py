@@ -1,17 +1,118 @@
-import asyncio
 import logging
 import re
 import secrets
 import time
 from typing import Any, Optional, cast
+from abc import ABC, abstractmethod
 
 import jwt
-from aiohttp import ClientResponse, ClientSession
+from aiohttp import ClientSession
 from yarl import URL
 
 
-class HomePlusOAuth2Async:
+class AbstractHomePlusOAuth2Async(ABC):
+
+    def __init__(self, subscription_key, oauth_client=None,):
+        """ AbstractHomePlusOAuth2Async Constructor.
+
+        Base class to handle the OAuth2 authentication flow and HTTP asynchronous requests.
+        Any class that extends this base class, should implement the method `async_get_access_token` to provide 
+        and refresh the OAuth2 access token accordingly.
+        
+        Based on aiohttp for asynchronous requests.
+            
+        Args:
+            subscription_key (str): Subscription key obtained from the API provider
+            oauth_client (:obj:`ClientSession`): aiohttp ClientSession object that handles HTTP async requests
+        """
+        self.subscription_key = subscription_key
+        self._subscription_header = { 'Ocp-Apim-Subscription-Key' : self.subscription_key }    
+
+        if oauth_client is None:
+            self.oauth_client = ClientSession()
+        else:
+            self.oauth_client = oauth_client
+
+    @abstractmethod
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token."""
+
+    async def request(self, method, url, **kwargs):
+        """ Makes an authenticated async HTTP request.
+        
+        This method wraps around the aiohttp request method and adds the mandatory subscription key header
+        that is required by the Home + Control API calls.
+
+        Args:
+            method (str): HTTP method to be used in the request (get, post, put, delete)
+            url (str): Endpoint of the HTTP request
+            **kwargs (dict): Keyword arguments that will be forwarded to the aiohttp request handler
+
+        Returns:
+            ClientResponse: aiohttp response object
+
+        Raises:
+            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+        """
+        # Add the mandatory subscription key header to the request
+        if 'headers' in kwargs:
+            kwargs['headers'] = { **kwargs['headers'], **self._subscription_header }
+        else:
+            kwargs['headers'] = self._subscription_header
+
+        await self.async_get_access_token()
+
+        access_token = await self.async_get_access_token()
+        kwargs['headers'] = { **kwargs['headers'], "authorization": f"Bearer {access_token}" }
+        return await self.oauth_client.request(method, url, **kwargs)
+    
+    async def get_request(self, url, **kwargs):
+        """ Makes an authenticated async HTTP GET request.
+        
+        Shortcut method that relies on `request()` call and simply hardcodes the 'get' HTTP method
+
+        Args:
+            url (str): Endpoint of the HTTP request
+            **kwargs(dict): Keyword arguments that will be forwarded to the aiohttp request handler
+
+        Returns:
+            ClientResponse: aiohttp response object
+
+        Raises:
+            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+        """
+        r = await self.request('get', url, **kwargs)
+        r.raise_for_status()
+        return r
+
+    async def post_request(self, url, data, **kwargs):
+        """ Makes an authenticated async HTTP POST request.
+        
+        Shortcut method that relies on `request()` call and simply hardcodes the 'post' HTTP method
+
+        Args:
+            url (str): Endpoint of the HTTP request
+            data (dict): Dictionary containing the parameters to be passed in the POST request body
+            **kwargs (dict): Keyword arguments that will be forwarded to the aiohttp request handler
+
+        Returns:
+            ClientResponse: aiohttp response object
+
+        Raises:
+            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+        """
+        kwargs['data'] = data
+        r = await self.request('post', url, **kwargs)
+        r.raise_for_status()
+        return r
+
+
+class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
     """ Handles authentication with OAuth2 - Uses aiohttp for asynchronous requests.
+
+    This class is an implementation of the base class AbstractHomePlusOAuth2Async and so
+    provides additional functions to request and manage the OAuth2 authentication flow and 
+    refresh access tokens when required.
 
     Attributes:
         client_id (str): Client identifier assigned by the API provider when registering an app
@@ -36,7 +137,7 @@ class HomePlusOAuth2Async:
                  token_updater=None,
                  oauth_client=None,
                 ):
-        """ HomePlusOAuth2Async Constructor.
+        """HomePlusOAuth2Async Constructor.
             
         Args:
             client_id (str): Client identifier assigned by the API provider when registering an app
@@ -47,24 +148,21 @@ class HomePlusOAuth2Async:
             token_update (function): function that is called when a new token is obtained from the authentication provider. Defaults to None
             oauth_client (ClientSession): aiohttp client session that handles asynchronous HTTP requests. If not specified, a new one is created. Defaults to None.
         """
+        super().__init__(
+            subscription_key=subscription_key,
+            oauth_client=oauth_client,
+        )
         self.client_id = client_id
         self.client_secret = client_secret
-        self.subscription_key = subscription_key
         if token == None:
             token = { "expires_on": 0, "expires_in": -1, "access_token " : "dummy", "refresh_token" : "dummy" }
         self.token = token
         self.redirect_uri = redirect_uri
         self.token_updater = token_updater
 
-        self._subscription_header = { 'Ocp-Apim-Subscription-Key' : self.subscription_key }    
         self._secret = secrets.token_hex()  # Used in JWT encode/decode
         self._state = secrets.token_hex()   # State string for token request
 
-        if oauth_client is None:
-            self.oauth_client = ClientSession()
-        else:
-            self.oauth_client = oauth_client
-    
     @property
     def logger(self) -> logging.Logger:
         """Logger of authentication module."""
@@ -200,18 +298,28 @@ class HomePlusOAuth2Async:
             )
         )
 
-    async def async_ensure_token_valid(self) -> None:
+    async def async_ensure_token_valid(self) -> str:
         """Ensures that the access token is valid.
         
-        If the token is no longer valid, then a new one is requested and the object attribute updated.
-        If the token is still valid, then do nothing.
-
+        *Deprecated* - Use `async_get_access_token()` instead.
+        
         Returns:
-            dict: Dictionary of the new token. The object attribute that holds the token is also updated.
+            str: String containing the new access token. The object attribute that holds the token is also updated.
+        """
+        return await self.async_get_access_token()
+
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token.
+        
+        If the current token is no longer valid, then a new one is requested and the object attribute updated.
+        If the current token is still valid, then do nothing.
+        
+        Returns:
+            str: String containing the new access token. The object attribute that holds the token is also updated.
         """
         if self.valid_token:
             self.logger.debug("Token is still valid")
-            return
+            return self.token
         self.logger.debug("Token is no longer valid so refreshing")
         return await self._async_refresh_token(self.token)
 
@@ -237,70 +345,4 @@ class HomePlusOAuth2Async:
                 }
             )
     
-    async def request(self, method, url, **kwargs):
-        """ Makes an authenticated async HTTP request.
-        
-        This method wraps around the aiohttp request method and adds the mandatory subscription key header
-        that is required by the Home + Control API calls.
-
-        Args:
-            method (str): HTTP method to be used in the request (get, post, put, delete)
-            url (str): Endpoint of the HTTP request
-            **kwargs (dict): Keyword arguments that will be forwarded to the aiohttp request handler
-
-        Returns:
-            ClientResponse: aiohttp response object
-
-        Raises:
-            ClientError raised by aiohttp if it encounters an exceptional situation in the request
-        """
-        await self.async_ensure_token_valid()
-
-        # Add the mandatory subscription key header to the request
-        if 'headers' in kwargs:
-            kwargs['headers'] = { **kwargs['headers'], **self._subscription_header }
-        else:
-            kwargs['headers'] = self._subscription_header
-
-        kwargs['headers'] = { **kwargs['headers'], "authorization": f"Bearer {self.token['access_token']}" }
-        return await self.oauth_client.request(method, url, **kwargs)
     
-    async def get_request(self, url, **kwargs):
-        """ Makes an authenticated async HTTP GET request.
-        
-        Shortcut method that relies on `request()` call and simply hardcodes the 'get' HTTP method
-
-        Args:
-            url (str): Endpoint of the HTTP request
-            **kwargs(dict): Keyword arguments that will be forwarded to the aiohttp request handler
-
-        Returns:
-            ClientResponse: aiohttp response object
-
-        Raises:
-            ClientError raised by aiohttp if it encounters an exceptional situation in the request
-        """
-        r = await self.request('get', url, **kwargs)
-        r.raise_for_status()
-        return r
-
-    async def post_request(self, url, data, **kwargs):
-        """ Makes an authenticated async HTTP POST request.
-        
-        Shortcut method that relies on `request()` call and simply hardcodes the 'post' HTTP method
-
-        Args:
-            url (str): Endpoint of the HTTP request
-            data (dict): Dictionary containing the parameters to be passed in the POST request body
-            **kwargs (dict): Keyword arguments that will be forwarded to the aiohttp request handler
-
-        Returns:
-            ClientResponse: aiohttp response object
-
-        Raises:
-            ClientError raised by aiohttp if it encounters an exceptional situation in the request
-        """
-        kwargs['data'] = data
-        r = await self.request('post', url, **kwargs)
-        r.raise_for_status()
-        return r

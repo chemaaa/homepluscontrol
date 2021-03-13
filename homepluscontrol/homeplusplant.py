@@ -3,7 +3,7 @@ import logging
 
 import aiohttp
 
-from .authentication import HomePlusOAuth2Async
+from .authentication import AbstractHomePlusOAuth2Async
 from .homepluslight import HomePlusLight
 from .homeplusmodule import HomePlusModule
 from .homeplusplug import HomePlusPlug
@@ -22,20 +22,20 @@ class HomePlusPlant:
         id (str): Unique identifier of the plant.
         name (str): Name of the plant.
         country (str): Two-letter country code where the plant is located.
-        oauth_client (HomePlusOAuth2Async): Authentication client to make request to the REST API.
+        oauth_client (AbstractHomePlusOAuth2Async): Authentication client to make requests to the REST API.
         modules (dict): Dictionary containing the information of all modules in the plant.
         topology (dict): JSON representation of the plant's topology as returned by the API
         module_status (dict): JSON representation of the plant modules' status as returned by the API
     """
 
-    def __init__(self, id, name, country, oauth_client: HomePlusOAuth2Async):
+    def __init__(self, id, name, country, oauth_client: AbstractHomePlusOAuth2Async):
         """ HomePlusPlant Constructor 
         
         Args:
             id (str): Unique identifier of the plant.
             name (str): Name of the plant.
             country (str): Two-letter country code where the plant is located.
-            oauth_client (HomePlusOAuth2Async): Authentication client to make request to the REST API.
+            oauth_client (AbstractHomePlusOAuth2Async): Authentication client to make request to the REST API.
         """
         self.id = id
         self.name = name
