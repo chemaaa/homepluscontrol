@@ -127,6 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-.vscode/launch.json
+.vscode/
+.DS_Store
 access_token
 __main__.py

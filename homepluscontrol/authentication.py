@@ -191,7 +191,11 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             str: String of the encoded data.
 
         """        
-        return jwt.encode(data, self._secret, algorithm="HS256").decode()
+        encoded_str = jwt.encode(data, self._secret, algorithm="HS256")
+        if isinstance(encoded_str, str):
+            return encoded_str
+        else:
+            return encoded_str.decode()
 
     def _decode_jwt(self, encoded: str) -> Optional[dict]:
         """JWT decode data - relies on PyJWT.
