@@ -31,18 +31,18 @@ class HomePlusControlApiError(Exception):
 
 
 class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
-    """Presents a unique API to the Home+ Control platform. 
+    """Presents a unique API to the Home+ Control platform.
 
     This class is an implementation of the base class AbstractHomePlusOAuth2Async and is intended for the integration
     into Home Assistant.
 
-    This class presents a unified view of the interactive modules that are available in the Home+ Control platform 
-    through the method `async_get_modules()` and it handles the refresh of the different elements of the plant, topology and 
+    This class presents a unified view of the interactive modules that are available in the Home+ Control platform
+    through the method `async_get_modules()` and it handles the refresh of the different elements of the plant, topology and
     module status through the provided update intervals.
 
     This class is still in an abstract form because it does not implement the method `async_get_access_token()`. That
     is provided through the Home Assistant integration.
-    
+
     Attributes:
         subscription_key (str): Subscription key obtained from the API provider
         oauth_client (:obj:`ClientSession`): aiohttp ClientSession object that handles HTTP async requests
@@ -52,9 +52,14 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
         _refresh_intervals (dict): Dictionary of the configured update intervals for plant, topology and module status information.
     """
 
-    def __init__(self, subscription_key, oauth_client=None, update_intervals=DEFAULT_UPDATE_INTERVALS):
-        """ HomePlusControlAPI Constructor 
-        
+    def __init__(
+        self,
+        subscription_key,
+        oauth_client=None,
+        update_intervals=DEFAULT_UPDATE_INTERVALS,
+    ):
+        """HomePlusControlAPI Constructor
+
         Args:
             subscription_key (str): Subscription key obtained from the API provider
             oauth_client (:obj:`ClientSession`): aiohttp ClientSession object that handles HTTP async requests
@@ -77,7 +82,9 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
         # Set the update intervals
         self._refresh_intervals = {}
         for interval_name in DEFAULT_UPDATE_INTERVALS:
-            new_interval_value = update_intervals.setdefault(interval_name, DEFAULT_UPDATE_INTERVALS[interval_name])
+            new_interval_value = update_intervals.setdefault(
+                interval_name, DEFAULT_UPDATE_INTERVALS[interval_name]
+            )
             self._refresh_intervals[interval_name] = new_interval_value
 
     @property
@@ -87,7 +94,7 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
 
     async def async_get_modules(self):
         """Retrieve the module information.
-        
+
         Returns:
             dict: Dictionary of modules across all of the plants keyed by the unique platform identifier.
         """
@@ -112,17 +119,24 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
             self._refresh_intervals[CONF_PLANT_UPDATE_INTERVAL],
         ):
             try:
-                result = await self.get_request(PLANT_TOPOLOGY_BASE_URL)  # Call the API
+                result = await self.get_request(
+                    PLANT_TOPOLOGY_BASE_URL
+                )  # Call the API
                 plant_info = await result.json()
             except aiohttp.ClientError as err:
-                raise HomePlusControlApiError("Error retrieving plant information") from err
+                raise HomePlusControlApiError(
+                    "Error retrieving plant information"
+                ) from err
 
             # If all goes well, we update the last check time
             self._last_check[CONF_PLANT_UPDATE_INTERVAL] = time.monotonic()
-            self.logger.debug("Obtained plant information from API: %s", plant_info)
+            self.logger.debug(
+                "Obtained plant information from API: %s", plant_info
+            )
         else:
             self.logger.debug(
-                "Not refreshing data just yet. Obtained plant information from cached info: %s", self._plants
+                "Not refreshing data just yet. Obtained plant information from cached info: %s",
+                self._plants,
             )
             return self._plants
 
@@ -142,7 +156,9 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
                 if cur_plant.oauth_client is None:
                     cur_plant.oauth_client = self
             else:
-                self.logger.debug("New plant with id %s detected.", plant["id"])
+                self.logger.debug(
+                    "New plant with id %s detected.", plant["id"]
+                )
                 self._plants[plant["id"]] = HomePlusPlant(
                     plant["id"], plant["name"], plant["country"], self
                 )
@@ -205,7 +221,9 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
                 CONF_MODULE_STATUS_UPDATE_INTERVAL,
                 self._refresh_intervals[CONF_MODULE_STATUS_UPDATE_INTERVAL],
             ):
-                self.logger.debug("API update of module status for plant %s.", plant.id)
+                self.logger.debug(
+                    "API update of module status for plant %s.", plant.id
+                )
                 try:
                     await plant.update_module_status()  # Call the API
                 except Exception as err:
