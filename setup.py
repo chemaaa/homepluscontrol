@@ -1,5 +1,6 @@
 import setuptools
 from setuptools.command.test import test as TestCommand
+import sys
 
 import homepluscontrol
 

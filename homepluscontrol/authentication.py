@@ -18,15 +18,20 @@ class AbstractHomePlusOAuth2Async(ABC):
     ):
         """AbstractHomePlusOAuth2Async Constructor.
 
-        Base class to handle the OAuth2 authentication flow and HTTP asynchronous requests.
-        Any class that extends this base class, should implement the method `async_get_access_token` to provide
-        and refresh the OAuth2 access token accordingly.
+        Base class to handle the OAuth2 authentication flow and HTTP
+        asynchronous requests.
+        Any class that extends this base class, should implement the method
+        `async_get_access_token` to provide and refresh the OAuth2 access
+        token accordingly.
 
         Based on aiohttp for asynchronous requests.
 
         Args:
-            subscription_key (str): Subscription key obtained from the API provider
-            oauth_client (:obj:`ClientSession`): aiohttp ClientSession object that handles HTTP async requests
+            subscription_key (str): Subscription key obtained from
+                                    the API provider
+            oauth_client (:obj:`ClientSession`): aiohttp ClientSession object
+                                                 that handles HTTP async
+                                                 requests
         """
         self.subscription_key = subscription_key
         self._subscription_header = {
@@ -45,19 +50,23 @@ class AbstractHomePlusOAuth2Async(ABC):
     async def request(self, method, url, **kwargs):
         """Makes an authenticated async HTTP request.
 
-        This method wraps around the aiohttp request method and adds the mandatory subscription key header
-        that is required by the Home + Control API calls.
+        This method wraps around the aiohttp request method and adds the
+        mandatory subscription key header that is required by the Home +
+        Control API calls.
 
         Args:
-            method (str): HTTP method to be used in the request (get, post, put, delete)
+            method (str): HTTP method to be used in the request (get, post,
+                          put, delete)
             url (str): Endpoint of the HTTP request
-            **kwargs (dict): Keyword arguments that will be forwarded to the aiohttp request handler
+            **kwargs (dict): Keyword arguments that will be forwarded to the
+                             aiohttp request handler
 
         Returns:
             ClientResponse: aiohttp response object
 
         Raises:
-            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+            ClientError raised by aiohttp if it encounters an exceptional
+            situation in the request
         """
         # Add the mandatory subscription key header to the request
         if "headers" in kwargs:
@@ -80,17 +89,20 @@ class AbstractHomePlusOAuth2Async(ABC):
     async def get_request(self, url, **kwargs):
         """Makes an authenticated async HTTP GET request.
 
-        Shortcut method that relies on `request()` call and simply hardcodes the 'get' HTTP method
+        Shortcut method that relies on `request()` call and simply hardcodes
+        the 'get' HTTP method
 
         Args:
             url (str): Endpoint of the HTTP request
-            **kwargs(dict): Keyword arguments that will be forwarded to the aiohttp request handler
+            **kwargs(dict): Keyword arguments that will be forwarded to the
+                            aiohttp request handler
 
         Returns:
             ClientResponse: aiohttp response object
 
         Raises:
-            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+            ClientError raised by aiohttp if it encounters an exceptional
+            situation in the request
         """
         r = await self.request("get", url, **kwargs)
         r.raise_for_status()
@@ -99,18 +111,22 @@ class AbstractHomePlusOAuth2Async(ABC):
     async def post_request(self, url, data, **kwargs):
         """Makes an authenticated async HTTP POST request.
 
-        Shortcut method that relies on `request()` call and simply hardcodes the 'post' HTTP method
+        Shortcut method that relies on `request()` call and simply hardcodes
+        the 'post' HTTP method
 
         Args:
             url (str): Endpoint of the HTTP request
-            data (dict): Dictionary containing the parameters to be passed in the POST request body
-            **kwargs (dict): Keyword arguments that will be forwarded to the aiohttp request handler
+            data (dict): Dictionary containing the parameters to be passed in
+                         the POST request body
+            **kwargs (dict): Keyword arguments that will be forwarded to the
+                             aiohttp request handler
 
         Returns:
             ClientResponse: aiohttp response object
 
         Raises:
-            ClientError raised by aiohttp if it encounters an exceptional situation in the request
+            ClientError raised by aiohttp if it encounters an exceptional
+            situation in the request
         """
         kwargs["data"] = data
         r = await self.request("post", url, **kwargs)
@@ -119,20 +135,28 @@ class AbstractHomePlusOAuth2Async(ABC):
 
 
 class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
-    """Handles authentication with OAuth2 - Uses aiohttp for asynchronous requests.
+    """Handles authentication with OAuth2 - Uses aiohttp for asynchronous
+    requests.
 
-    This class is an implementation of the base class AbstractHomePlusOAuth2Async and so
-    provides additional functions to request and manage the OAuth2 authentication flow and
-    refresh access tokens when required.
+    This class is an implementation of the base class
+    AbstractHomePlusOAuth2Async and so provides additional functions to
+    request and manage the OAuth2 authentication flow and refresh access
+    tokens when required.
 
     Attributes:
-        client_id (str): Client identifier assigned by the API provider when registering an app
-        client_secret (str): Client secret assigned by the API provider when registering an app
-        subscription_key (str): Subscription key obtained from the API provider
+        client_id (str): Client identifier assigned by the API provider
+                         when registering an app
+        client_secret (str): Client secret assigned by the API provider
+                             when registering an app
+        subscription_key (str): Subscription key obtained from
+                                the API provider
         token (dict): oauth2 token used by this authentication instance
-        redirect_uri (str): URL for the redirection from the authentication provider
-        token_update (function): function that is called when a new token is obtained from the authentication provider
-        oauth_client (:obj:`ClientSession`): aiohttp ClientSession object that handles HTTP async requests
+        redirect_uri (str): URL for the redirection from
+                            the authentication provider
+        token_update (function): function that is called when a new token is
+                                 obtained from the authentication provider
+        oauth_client (:obj:`ClientSession`): aiohttp ClientSession object that
+                                             handles HTTP async requests
     """
 
     # Authentication URLs for Legrant Home+ Control API
@@ -152,13 +176,25 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
         """HomePlusOAuth2Async Constructor.
 
         Args:
-            client_id (str): Client identifier assigned by the API provider when registering an app
-            client_secret (str): Client secret assigned by the API provider when registering an app
-            subscription_key (str): Subscription key obtained from the API provider
-            token (dict, optional): oauth2 token used by this authentication instance. Defaults to None.
-            redirect_uri (str, optional): URL for the redirection from the authentication provider. Defaults to None
-            token_update (function): function that is called when a new token is obtained from the authentication provider. Defaults to None
-            oauth_client (ClientSession): aiohttp client session that handles asynchronous HTTP requests. If not specified, a new one is created. Defaults to None.
+            client_id (str): Client identifier assigned by the API provider
+                             when registering an app
+            client_secret (str): Client secret assigned by the API provider
+                                 when registering an app
+            subscription_key (str): Subscription key obtained from
+                                    the API provider
+            token (dict, optional): oauth2 token used by this authentication
+                                    instance. Defaults to None.
+            redirect_uri (str, optional): URL for the redirection from the
+                                          authentication provider.
+                                          Defaults to None
+            token_update (function): function that is called when a new
+                                     token is obtained from the
+                                     authentication provider.
+                                     Defaults to None
+            oauth_client (ClientSession): aiohttp client session that
+                                          handles asynchronous HTTP requests.
+                                          If not specified, a new one is
+                                          created. Defaults to None.
         """
         super().__init__(
             subscription_key=subscription_key,
@@ -166,7 +202,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
         )
         self.client_id = client_id
         self.client_secret = client_secret
-        if token == None:
+        if token is None:
             token = {
                 "expires_on": 0,
                 "expires_in": -1,
@@ -219,7 +255,8 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             encoded (str): Encoded string that is to be decoded
 
         Returns:
-            dict: Dictionary of the decoded token or None if there is an error during the decoding process.
+            dict: Dictionary of the decoded token or None if there is an error
+                  during the decoding process.
 
         """
         secret = cast(str, self._secret)
@@ -260,7 +297,8 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             token (dict): Token to be updated
 
         Returns:
-            dict: Token dictionary with the new access token and expiration times
+            dict: Token dictionary with the new access token and
+            expiration times
         """
         new_token = await self._token_request(
             {
@@ -296,7 +334,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
         resp.raise_for_status()
 
         self.token = cast(dict, await resp.json())
-        if self.token_updater != None:
+        if self.token_updater is not None:
             await self.token_updater(self.token)
         return self.token
 
@@ -324,18 +362,21 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
         *Deprecated* - Use `async_get_access_token()` instead.
 
         Returns:
-            str: String containing the new access token. The object attribute that holds the token is also updated.
+            str: String containing the new access token. The object attribute
+                 that holds the token is also updated.
         """
         return await self.async_get_access_token()
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token.
 
-        If the current token is no longer valid, then a new one is requested and the object attribute updated.
+        If the current token is no longer valid, then a new one is requested
+        and the object attribute updated.
         If the current token is still valid, then do nothing.
 
         Returns:
-            str: String containing the new access token. The object attribute that holds the token is also updated.
+            str: String containing the new access token. The object attribute
+                 that holds the token is also updated.
         """
         if self.valid_token:
             self.logger.debug("Token is still valid")
@@ -344,20 +385,24 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
         return await self._async_refresh_token(self.token)
 
     async def async_fetch_initial_token(self, redirect_url: Any) -> dict:
-        """Fetches the initial access and refresh tokens once the authorization step was completed.
+        """Fetches the initial access and refresh tokens once the
+        authorization step was completed.
 
-        This method relies on the redirect URL that was provided by the API once authorization was approved.
+        This method relies on the redirect URL that was provided by the
+        API once authorization was approved.
 
         Args:
-            redirect_url (str): The redirect URL that was provided by the API after authorizing.
+            redirect_url (str): The redirect URL that was provided by
+                                the API after authorizing.
 
         Returns:
-            dict: Dictionary of the new token. The object attribute that holds the token is also updated.
+            dict: Dictionary of the new token. The object attribute that
+                  holds the token is also updated.
 
         """
         req_body = self._split_redirect_url(redirect_url)
 
-        if req_body != None and req_body["state"] == self._state:
+        if req_body is not None and req_body["state"] == self._state:
             return await self._token_request(
                 {
                     "grant_type": "authorization_code",
