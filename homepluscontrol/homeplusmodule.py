@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 
 import aiohttp
 
@@ -77,12 +76,14 @@ class HomePlusModule:
         status_result = json.loads('{"modules": { } }')
         try:
             response = await oauth_client.get_request(self.statusUrl)
-        except aiohttp.ClientResponseError as err:
-            self.logger.error("HTTP client response error when update module status")
+        except aiohttp.ClientResponseError:
+            self.logger.error(
+                "HTTP client response error when update module status"
+            )
         else:
             status_result = await response.json()
             module_key = list(status_result)[0]
             module_data = status_result[module_key][0]
-            self.reachable = module_data["reachable"] == True
+            self.reachable = module_data["reachable"] is True
             self.fw = module_data["fw"]
         return module_data

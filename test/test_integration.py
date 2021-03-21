@@ -1,14 +1,10 @@
 import asyncio
-import time
 
 import pytest
 from aiohttp import ClientResponseError
-from aioresponses import aioresponses
 
 from homepluscontrol import (
-    authentication,
     homepluslight,
-    homeplusmodule,
     homeplusplant,
     homeplusplug,
     homeplusremote,
@@ -16,12 +12,13 @@ from homepluscontrol import (
 
 # Integration tests
 
+
 # Test error responses from the API
 def test_error_responses(error_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     with pytest.raises(Exception) as exc_info:
-        resp = loop.run_until_complete(
+        loop.run_until_complete(
             test_client.get_request(
                 "https://api.developer.legrand.com/hc/api/v1.0/plants"
             )
@@ -37,7 +34,9 @@ def test_plant_data(mock_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -47,7 +46,9 @@ def test_plant_data(mock_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
@@ -96,7 +97,9 @@ def test_reducing_plant(mock_reduced_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -106,7 +109,9 @@ def test_reducing_plant(mock_reduced_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
@@ -129,7 +134,9 @@ def test_reducing_plant(mock_reduced_aioresponse, test_client):
 
     # Now change the topology and assert that the updates are "seen" in the plant object
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -139,7 +146,9 @@ def test_reducing_plant(mock_reduced_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
     # Read the modules into arrays
     loop.run_until_complete(test_plant.update_topology_and_modules())
@@ -167,7 +176,9 @@ def test_reducing_module_status(mock_reduced_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -177,7 +188,9 @@ def test_reducing_module_status(mock_reduced_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
@@ -235,7 +248,9 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -245,7 +260,9 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
@@ -268,7 +285,9 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
 
     # Now change the topology and assert that the updates are "seen" in the plant object
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -278,7 +297,9 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
     # Read the modules into arrays
     loop.run_until_complete(test_plant.update_topology_and_modules())
@@ -302,11 +323,13 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
 
 # Topology gains a couple of modules, but we only refresh the module status
 # The missing modules should change their reachability to False
-def test_reducing_module_status(mock_growing_aioresponse, test_client):
+def test_increasing_module_status(mock_growing_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -316,7 +339,9 @@ def test_reducing_module_status(mock_growing_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
@@ -381,7 +406,9 @@ def test_plant_data_ordering(mock_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -391,7 +418,9 @@ def test_plant_data_ordering(mock_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
 
     # Read the modules status, but we have no topology!!
@@ -452,7 +481,9 @@ def test_plant_partial_error(partial_error_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     resp = loop.run_until_complete(
-        test_client.get_request("https://api.developer.legrand.com/hc/api/v1.0/plants")
+        test_client.get_request(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+        )
     )
     plant_info = loop.run_until_complete(resp.json())
 
@@ -462,7 +493,9 @@ def test_plant_partial_error(partial_error_aioresponse, test_client):
         p["id"], p["name"], p["country"], test_client
     )
 
-    plant_str = "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    plant_str = (
+        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
+    )
     assert test_plant.__str__() == plant_str
 
     # Now read the topology

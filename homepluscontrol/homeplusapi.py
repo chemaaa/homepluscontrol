@@ -49,7 +49,8 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
         _plants (dict): Dictionary containing the information of all plants.
         _modules (dict): Dictionary containing the information of all modules in the plants.
         _modules_to_remove (dict): Dictionary containing the information of modules that are no longer in the plants' topology.
-        _refresh_intervals (dict): Dictionary of the configured update intervals for plant, topology and module status information.
+        _refresh_intervals (dict): Dictionary of the configured update intervals for plant, topology
+                                   and module status information.
     """
 
     def __init__(
@@ -63,7 +64,8 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
         Args:
             subscription_key (str): Subscription key obtained from the API provider
             oauth_client (:obj:`ClientSession`): aiohttp ClientSession object that handles HTTP async requests
-            update_intervals (dict): Optional dictionary that contains refresh intervals for the plant, topology and module status.
+            update_intervals (dict): Optional dictionary that contains refresh intervals for the plant, topology
+                                     and module status.
         """
         super().__init__(
             subscription_key=subscription_key,

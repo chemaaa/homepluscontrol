@@ -1,11 +1,6 @@
 import asyncio
-import json
-import time
-
-from aioresponses import aioresponses
 
 from homepluscontrol import (
-    authentication,
     homeplusinteractivemodule,
     homepluslight,
     homeplusmodule,
@@ -13,8 +8,6 @@ from homepluscontrol import (
     homeplusplug,
     homeplusremote,
 )
-
-from . import conftest
 
 
 def setup_mock_plant(mock_aioresponse, test_client):
@@ -26,9 +19,11 @@ def setup_mock_plant(mock_aioresponse, test_client):
     return mock_plant, loop
 
 
-### Plant Tests
+# Plant Tests
 def test_plant_str(test_plant):
-    plant_str = "Home+ Plant: name->Mock Plant, id->mock_plant_1, country->The World"
+    plant_str = (
+        "Home+ Plant: name->Mock Plant, id->mock_plant_1, country->The World"
+    )
     assert test_plant.__str__() == plant_str
 
 
@@ -38,7 +33,8 @@ def test_topology_and_module_update(mock_aioresponse, test_client):
         mock_plant.modules["0000000987654321fedcba"], homeplusplug.HomePlusPlug
     )
     assert (
-        mock_plant.modules["0000000787654321fedcba"].name == "Living Room Ceiling Light"
+        mock_plant.modules["0000000787654321fedcba"].name
+        == "Living Room Ceiling Light"
     )
     assert mock_plant.modules["0000000987654321fedcba"].fw == 42
     assert mock_plant.modules["0000000987654321fedcba"].status == "on"
@@ -56,7 +52,8 @@ def test_topology_update(mock_aioresponse, test_client):
         mock_plant.modules["0000000987654321fedcba"], homeplusplug.HomePlusPlug
     )
     assert (
-        mock_plant.modules["0000000787654321fedcba"].name == "Living Room Ceiling Light"
+        mock_plant.modules["0000000787654321fedcba"].name
+        == "Living Room Ceiling Light"
     )
     # But it should not have the status
     assert mock_plant.modules["0000000987654321fedcba"].fw == ""
@@ -89,7 +86,8 @@ def test_topology_and_module_separate_update(mock_aioresponse, test_client):
         mock_plant.modules["0000000987654321fedcba"], homeplusplug.HomePlusPlug
     )
     assert (
-        mock_plant.modules["0000000787654321fedcba"].name == "Living Room Ceiling Light"
+        mock_plant.modules["0000000787654321fedcba"].name
+        == "Living Room Ceiling Light"
     )
     # But it should not have the status
     assert mock_plant.modules["0000000987654321fedcba"].fw == ""
@@ -102,7 +100,7 @@ def test_topology_and_module_separate_update(mock_aioresponse, test_client):
     assert mock_plant.modules["0000000987654321fedcba"].reachable
 
 
-### Base Module Tests
+# Base Module Tests
 def test_base_module_url(test_module):
     test_module.build_status_url("https://dummy.com:1123/")
     assert (
@@ -123,10 +121,10 @@ def test_base_update_status(mock_aioresponse, test_client):
     status_result = loop.run_until_complete(mock_module.get_status_update())
     assert isinstance(mock_module, homeplusmodule.HomePlusModule)
     assert status_result["reachable"]
-    assert status_result["fw"] != None
+    assert status_result["fw"] is not None
 
 
-### Plug Module Tests
+# Plug Module Tests
 def test_plug_module_url(test_plug):
     assert (
         test_plug.statusUrl
@@ -145,10 +143,12 @@ def test_plug_update_status(mock_aioresponse, test_client):
 
     status_result = loop.run_until_complete(mock_plug.get_status_update())
     assert isinstance(mock_plug, homeplusmodule.HomePlusModule)
-    assert isinstance(mock_plug, homeplusinteractivemodule.HomePlusInteractiveModule)
+    assert isinstance(
+        mock_plug, homeplusinteractivemodule.HomePlusInteractiveModule
+    )
     assert isinstance(mock_plug, homeplusplug.HomePlusPlug)
     assert status_result["reachable"]
-    assert status_result["fw"] != None
+    assert status_result["fw"] is not None
     assert status_result["status"] == "on"
 
 
@@ -156,7 +156,7 @@ def test_plug_turn_on(mock_aioresponse, test_client):
     mock_plant, loop = setup_mock_plant(mock_aioresponse, test_client)
     mock_plug = mock_plant.modules["0000000587654321fedcba"]
 
-    status_result = loop.run_until_complete(mock_plug.turn_on())
+    loop.run_until_complete(mock_plug.turn_on())
     assert mock_plug.status == "on"
 
 
@@ -164,7 +164,7 @@ def test_plug_turn_off(mock_aioresponse, test_client):
     mock_plant, loop = setup_mock_plant(mock_aioresponse, test_client)
     mock_plug = mock_plant.modules["0000000587654321fedcba"]
 
-    status_result = loop.run_until_complete(mock_plug.turn_off())
+    loop.run_until_complete(mock_plug.turn_off())
     assert mock_plug.status == "off"
 
 
@@ -173,11 +173,11 @@ def test_plug_toggle(mock_aioresponse, test_client):
     mock_plug = mock_plant.modules["0000000587654321fedcba"]
 
     # Fixture light is on to start with
-    status_result = loop.run_until_complete(mock_plug.toggle_status())
+    loop.run_until_complete(mock_plug.toggle_status())
     assert mock_plug.status == "off"
 
 
-### Light Module Tests
+# Light Module Tests
 def test_light_module_url(test_light):
     assert (
         test_light.statusUrl
@@ -196,10 +196,12 @@ def test_light_update_status(mock_aioresponse, test_client):
 
     status_result = loop.run_until_complete(mock_light.get_status_update())
     assert isinstance(mock_light, homeplusmodule.HomePlusModule)
-    assert isinstance(mock_light, homeplusinteractivemodule.HomePlusInteractiveModule)
+    assert isinstance(
+        mock_light, homeplusinteractivemodule.HomePlusInteractiveModule
+    )
     assert isinstance(mock_light, homepluslight.HomePlusLight)
     assert status_result["reachable"]
-    assert status_result["fw"] != None
+    assert status_result["fw"] is not None
     assert status_result["status"] == "off"
 
 
@@ -207,7 +209,7 @@ def test_light_turn_on(mock_aioresponse, test_client):
     mock_plant, loop = setup_mock_plant(mock_aioresponse, test_client)
     mock_light = mock_plant.modules["0000000787654321fedcba"]
 
-    status_result = loop.run_until_complete(mock_light.turn_on())
+    loop.run_until_complete(mock_light.turn_on())
     assert mock_light.status == "on"
 
 
@@ -215,7 +217,7 @@ def test_light_turn_off(mock_aioresponse, test_client):
     mock_plant, loop = setup_mock_plant(mock_aioresponse, test_client)
     mock_light = mock_plant.modules["0000000787654321fedcba"]
 
-    status_result = loop.run_until_complete(mock_light.turn_off())
+    loop.run_until_complete(mock_light.turn_off())
     assert mock_light.status == "off"
 
 
@@ -224,11 +226,11 @@ def test_light_toggle(mock_aioresponse, test_client):
     mock_light = mock_plant.modules["0000000787654321fedcba"]
 
     # Fixture light is off to start with
-    status_result = loop.run_until_complete(mock_light.toggle_status())
+    loop.run_until_complete(mock_light.toggle_status())
     assert mock_light.status == "on"
 
 
-### Remote Module Tests
+# Remote Module Tests
 def test_remote_module_url(test_remote):
     assert (
         test_remote.statusUrl
@@ -252,5 +254,5 @@ def test_remote_update_status(mock_aioresponse, test_client):
     )
     assert isinstance(mock_remote, homeplusremote.HomePlusRemote)
     assert not status_result["reachable"]
-    assert status_result["fw"] != None
+    assert status_result["fw"] is not None
     assert status_result["battery"] == "full"

@@ -150,7 +150,7 @@ def plant_topology():
             }
         ]
     }
-    }   
+    }
     """
 
 
@@ -225,7 +225,7 @@ def plant_topology_reduced():
             }
         ]
     }
-    }   
+    }
     """
 
 
@@ -581,7 +581,12 @@ def remote_status():
 
 @pytest.fixture()
 def mock_aioresponse(
-    plant_data, plant_modules, plant_topology, plug_status, light_status, remote_status
+    plant_data,
+    plant_modules,
+    plant_topology,
+    plug_status,
+    light_status,
+    remote_status,
 ):
     with aioresponses() as mock:
         mock.get(

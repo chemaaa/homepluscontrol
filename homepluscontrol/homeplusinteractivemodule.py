@@ -1,5 +1,3 @@
-import logging
-
 import aiohttp
 
 from .homeplusmodule import HomePlusModule
@@ -83,7 +81,9 @@ class HomePlusInteractiveModule(HomePlusModule):
                 self.statusUrl, data=desired_end_status
             )
         except aiohttp.ClientResponseError as err:
-            self.logger.error("HTTP client response error when posting module status")
+            self.logger.error(
+                "HTTP client response error when posting module status"
+            )
         else:
             update_status_result = True
         return update_status_result

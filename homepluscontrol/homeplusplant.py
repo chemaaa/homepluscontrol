@@ -9,7 +9,9 @@ from .homeplusmodule import HomePlusModule
 from .homeplusplug import HomePlusPlug
 from .homeplusremote import HomePlusRemote
 
-PLANT_TOPOLOGY_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/plants/"
+PLANT_TOPOLOGY_BASE_URL = (
+    "https://api.developer.legrand.com/hc/api/v1.0/plants/"
+)
 """ API endpoint for the Home+ plant information. """
 
 PLANT_TOPOLOGY_RESOURCE = "/topology"
@@ -29,7 +31,9 @@ class HomePlusPlant:
         module_status (dict): JSON representation of the plant modules' status as returned by the API
     """
 
-    def __init__(self, id, name, country, oauth_client: AbstractHomePlusOAuth2Async):
+    def __init__(
+        self, id, name, country, oauth_client: AbstractHomePlusOAuth2Async
+    ):
         """HomePlusPlant Constructor
 
         Args:
@@ -66,7 +70,7 @@ class HomePlusPlant:
             response = await self.oauth_client.get_request(
                 PLANT_TOPOLOGY_BASE_URL + self.id + PLANT_TOPOLOGY_RESOURCE
             )
-        except aiohttp.ClientResponseError as err:
+        except aiohttp.ClientResponseError:
             self.logger.error(
                 "HTTP client response error when refreshing plant topology"
             )
@@ -75,7 +79,8 @@ class HomePlusPlant:
 
     async def refresh_module_status(self):
         """Makes a call to the API to refresh the status of all modules in the plant into attribute `module_status`.
-        The module status provides information about the modules current status, eg. reachability, on/off, battery, consumption.
+        The module status provides information about the modules current status, eg. reachability,
+        on/off, battery, consumption.
 
         TODO: Handle consumptions
         """
@@ -83,7 +88,7 @@ class HomePlusPlant:
             response = await self.oauth_client.get_request(
                 PLANT_TOPOLOGY_BASE_URL + self.id
             )
-        except aiohttp.ClientResponseError as err:
+        except aiohttp.ClientResponseError:
             self.logger.error(
                 "HTTP client response error when refreshing module status"
             )
@@ -204,7 +209,8 @@ class HomePlusPlant:
         self._parse_module_status()
 
     def _create_module(self, input_module):
-        """'Factory' method of specific Home+ Control modules depending on their type that adds the new module to the attribute `modules`.
+        """'Factory' method of specific Home+ Control modules depending on their type that adds the new module
+        to the attribute `modules`.
 
         Args:
             input_module (dict): Dictionary representing the JSON structure of a module as returned by the API.
@@ -264,7 +270,7 @@ class HomePlusPlant:
         """
         u_module = self.modules[curr_module_id]
         u_module.fw = input_module["fw"]
-        u_module.reachable = input_module["reachable"] == True
+        u_module.reachable = input_module["reachable"] is True
 
     def _update_interactive_module_status(self, curr_module_id, input_module):
         """Update the information of an existing interactive module instance in the plant.

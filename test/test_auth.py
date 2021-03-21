@@ -76,9 +76,7 @@ def test_split_redirect_url():
             token=token,
         )
         expected_state = client._encode_jwt({"state": "expected_state"})
-        expected_url = (
-            f"http://www.dummy.com:1123/auth?code=expected_code&state={expected_state}"
-        )
+        expected_url = f"http://www.dummy.com:1123/auth?code=expected_code&state={expected_state}"
         result = client._split_redirect_url(expected_url)
 
         assert result["code"] == "expected_code"
@@ -111,7 +109,7 @@ def test_decode_state():
 
         # Test invalid decode
         result = client._decode_jwt(2)
-        assert result == None
+        assert result is None
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(test_coroutine())
