@@ -281,7 +281,7 @@ def plant_modules():
                 "consumptions": [
                     {
                         "unit": "watt",
-                        "value": 0,
+                        "value": 89,
                         "timestamp": "2020-11-22T11:03:05+00:00"
                     }
                 ],

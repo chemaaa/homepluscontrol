@@ -21,9 +21,7 @@ def setup_mock_plant(mock_aioresponse, test_client):
 
 # Plant Tests
 def test_plant_str(test_plant):
-    plant_str = (
-        "Home+ Plant: name->Mock Plant, id->mock_plant_1, country->The World"
-    )
+    plant_str = "Home+ Plant: name->Mock Plant, id->mock_plant_1, country->The World"
     assert test_plant.__str__() == plant_str
 
 
@@ -33,12 +31,12 @@ def test_topology_and_module_update(mock_aioresponse, test_client):
         mock_plant.modules["0000000987654321fedcba"], homeplusplug.HomePlusPlug
     )
     assert (
-        mock_plant.modules["0000000787654321fedcba"].name
-        == "Living Room Ceiling Light"
+        mock_plant.modules["0000000787654321fedcba"].name == "Living Room Ceiling Light"
     )
     assert mock_plant.modules["0000000987654321fedcba"].fw == 42
     assert mock_plant.modules["0000000987654321fedcba"].status == "on"
     assert mock_plant.modules["0000000987654321fedcba"].reachable
+    assert mock_plant.modules["0000000987654321fedcba"].power == 89
 
 
 def test_topology_update(mock_aioresponse, test_client):
@@ -52,8 +50,7 @@ def test_topology_update(mock_aioresponse, test_client):
         mock_plant.modules["0000000987654321fedcba"], homeplusplug.HomePlusPlug
     )
     assert (
-        mock_plant.modules["0000000787654321fedcba"].name
-        == "Living Room Ceiling Light"
+        mock_plant.modules["0000000787654321fedcba"].name == "Living Room Ceiling Light"
     )
     # But it should not have the status
     assert mock_plant.modules["0000000987654321fedcba"].fw == ""
@@ -86,8 +83,7 @@ def test_topology_and_module_separate_update(mock_aioresponse, test_client):
         mock_plant.modules["0000000987654321fedcba"], homeplusplug.HomePlusPlug
     )
     assert (
-        mock_plant.modules["0000000787654321fedcba"].name
-        == "Living Room Ceiling Light"
+        mock_plant.modules["0000000787654321fedcba"].name == "Living Room Ceiling Light"
     )
     # But it should not have the status
     assert mock_plant.modules["0000000987654321fedcba"].fw == ""
@@ -143,9 +139,7 @@ def test_plug_update_status(mock_aioresponse, test_client):
 
     status_result = loop.run_until_complete(mock_plug.get_status_update())
     assert isinstance(mock_plug, homeplusmodule.HomePlusModule)
-    assert isinstance(
-        mock_plug, homeplusinteractivemodule.HomePlusInteractiveModule
-    )
+    assert isinstance(mock_plug, homeplusinteractivemodule.HomePlusInteractiveModule)
     assert isinstance(mock_plug, homeplusplug.HomePlusPlug)
     assert status_result["reachable"]
     assert status_result["fw"] is not None
@@ -196,9 +190,7 @@ def test_light_update_status(mock_aioresponse, test_client):
 
     status_result = loop.run_until_complete(mock_light.get_status_update())
     assert isinstance(mock_light, homeplusmodule.HomePlusModule)
-    assert isinstance(
-        mock_light, homeplusinteractivemodule.HomePlusInteractiveModule
-    )
+    assert isinstance(mock_light, homeplusinteractivemodule.HomePlusInteractiveModule)
     assert isinstance(mock_light, homepluslight.HomePlusLight)
     assert status_result["reachable"]
     assert status_result["fw"] is not None

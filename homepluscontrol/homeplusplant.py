@@ -9,13 +9,17 @@ from .homeplusmodule import HomePlusModule
 from .homeplusplug import HomePlusPlug
 from .homeplusremote import HomePlusRemote
 
-PLANT_TOPOLOGY_BASE_URL = (
-    "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-)
+PLANT_TOPOLOGY_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/plants/"
 """ API endpoint for the Home+ plant information. """
 
 PLANT_TOPOLOGY_RESOURCE = "/topology"
 """ Path to the Home+ plant topology information. """
+
+MODULE_CLASSES = {
+    "light": HomePlusLight,
+    "plug": HomePlusPlug,
+    "remote": HomePlusRemote,
+}
 
 
 class HomePlusPlant:
@@ -31,9 +35,7 @@ class HomePlusPlant:
         module_status (dict): JSON representation of the plant modules' status as returned by the API
     """
 
-    def __init__(
-        self, id, name, country, oauth_client: AbstractHomePlusOAuth2Async
-    ):
+    def __init__(self, id, name, country, oauth_client: AbstractHomePlusOAuth2Async):
         """HomePlusPlant Constructor
 
         Args:
@@ -215,38 +217,15 @@ class HomePlusPlant:
         Args:
             input_module (dict): Dictionary representing the JSON structure of a module as returned by the API.
         """
-        if input_module["device"] == "light":
-            self.modules[input_module["id"]] = HomePlusLight(
-                plant=self,
-                id=input_module["id"],
-                device=input_module["device"],
-                name=input_module["name"],
-                hw_type=input_module["hw_type"],
-            )
-        elif input_module["device"] == "plug":
-            self.modules[input_module["id"]] = HomePlusPlug(
-                plant=self,
-                id=input_module["id"],
-                device=input_module["device"],
-                name=input_module["name"],
-                hw_type=input_module["hw_type"],
-            )
-        elif input_module["device"] == "remote":
-            self.modules[input_module["id"]] = HomePlusRemote(
-                plant=self,
-                id=input_module["id"],
-                device=input_module["device"],
-                name=input_module["name"],
-                hw_type=input_module["hw_type"],
-            )
-        else:
-            self.modules[input_module["id"]] = HomePlusModule(
-                plant=self,
-                id=input_module["id"],
-                device=input_module["device"],
-                name=input_module["name"],
-                hw_type=input_module["hw_type"],
-            )
+        module_class = MODULE_CLASSES.get(input_module["device"], HomePlusModule)
+
+        self.modules[input_module["id"]] = module_class(
+            plant=self,
+            id=input_module["id"],
+            device=input_module["device"],
+            name=input_module["name"],
+            hw_type=input_module["hw_type"],
+        )
 
     def _update_module(self, input_module):
         """Update the information of an existing module instance in the plant, based on the latest input data.
@@ -283,6 +262,7 @@ class HomePlusPlant:
         """
         u_module = self.modules[curr_module_id]
         u_module.status = input_module["status"]
+        u_module.power = int(input_module["consumptions"][0]["value"])
 
     def _update_remote_status(self, curr_module_id, input_module):
         """Update the information of an existing remote module instance in the plant.
