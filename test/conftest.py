@@ -510,7 +510,7 @@ def plug_status():
             "consumptions": [
                 {
                     "unit": "watt",
-                    "value": 0,
+                    "value": 1999,
                     "timestamp": "2020-11-22T11:14:14+00:00"
                 }
             ],

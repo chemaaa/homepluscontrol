@@ -11,6 +11,7 @@ class HomePlusInteractiveModule(HomePlusModule):
 
     Attributes:
         status (str): The module can have status = 'on' or status = 'off'
+        power (int): The module power consumption in watts (as an integer value)
     """
 
     MODULE_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/dummy"
@@ -39,6 +40,7 @@ class HomePlusInteractiveModule(HomePlusModule):
         """
         super().__init__(plant, id, name, hw_type, device, fw, type, reachable)
         self.status = ""
+        self.power = 0
 
     def __str__(self):
         """ Return the string representing this module """
@@ -96,4 +98,5 @@ class HomePlusInteractiveModule(HomePlusModule):
         """
         module_data = await super().get_status_update()
         self.status = module_data["status"]
+        self.power = int(module_data["consumptions"][0]["value"])
         return module_data

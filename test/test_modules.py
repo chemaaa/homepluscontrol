@@ -144,6 +144,8 @@ def test_plug_update_status(mock_aioresponse, test_client):
     assert status_result["reachable"]
     assert status_result["fw"] is not None
     assert status_result["status"] == "on"
+    assert mock_plug.status == "on"
+    assert mock_plug.power == 1999
 
 
 def test_plug_turn_on(mock_aioresponse, test_client):
@@ -195,6 +197,8 @@ def test_light_update_status(mock_aioresponse, test_client):
     assert status_result["reachable"]
     assert status_result["fw"] is not None
     assert status_result["status"] == "off"
+    assert mock_light.status == "off"
+    assert mock_light.power == 0
 
 
 def test_light_turn_on(mock_aioresponse, test_client):
