@@ -166,17 +166,13 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
                 )
 
         # Discard plants that may have disappeared
-        plants_to_pop = []
-        for existing_id in self._plants:
-            if existing_id in current_plant_ids:
-                continue
-            self.logger.debug(
-                "Plant with id %s is no longer present, so remove from cache.",
-                existing_id,
-            )
-            plants_to_pop.append(existing_id)
+        plants_to_pop = set(self._plants) - current_plant_ids
 
         for plant in plants_to_pop:
+            self.logger.debug(
+                "Plant with id %s is no longer present, so remove from cache.",
+                plant.id,
+            )
             self._plants.pop(plant, None)
 
         return self._plants

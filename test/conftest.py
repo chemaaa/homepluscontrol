@@ -851,3 +851,12 @@ def partial_error_aioresponse(plant_data, plant_modules, plant_topology):
         )
 
         yield mock
+
+@pytest.fixture()
+def async_mock_plant(mock_aioresponse, test_client):
+    loop = asyncio.get_event_loop()
+    mock_plant = homeplusplant.HomePlusPlant(
+        "123456789009876543210", "My Home", "ES", test_client
+    )
+    loop.run_until_complete(mock_plant.update_topology_and_modules())
+    return mock_plant, loop
