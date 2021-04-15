@@ -20,7 +20,7 @@ def test_error_responses(error_aioresponse, test_client):
     with pytest.raises(Exception) as exc_info:
         loop.run_until_complete(
             test_client.get_request(
-                "https://api.developer.legrand.com/hc/api/v1.0/plants"
+                "https://api.developer.legrand.com/hc/api/v1.0/plants/"
             )
         )
 
@@ -35,7 +35,7 @@ def test_plant_data(mock_aioresponse, test_client):
 
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())
@@ -98,7 +98,7 @@ def test_reducing_plant(mock_reduced_aioresponse, test_client):
 
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())
@@ -135,7 +135,7 @@ def test_reducing_plant(mock_reduced_aioresponse, test_client):
     # Now change the topology and assert that the updates are "seen" in the plant object
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())
@@ -177,7 +177,7 @@ def test_reducing_module_status(mock_reduced_aioresponse, test_client):
 
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())
@@ -249,7 +249,7 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
 
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())
@@ -286,7 +286,7 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
     # Now change the topology and assert that the updates are "seen" in the plant object
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())
@@ -328,7 +328,7 @@ def test_increasing_module_status(mock_growing_aioresponse, test_client):
 
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())
@@ -407,7 +407,7 @@ def test_plant_data_ordering(mock_aioresponse, test_client):
 
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())
@@ -482,7 +482,7 @@ def test_plant_partial_error(partial_error_aioresponse, test_client):
 
     resp = loop.run_until_complete(
         test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants"
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
         )
     )
     plant_info = loop.run_until_complete(resp.json())

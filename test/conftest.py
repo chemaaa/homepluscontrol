@@ -11,6 +11,7 @@ from homepluscontrol import (
     homeplusplant,
     homeplusplug,
     homeplusremote,
+    homeplusautomation,
 )
 
 # Test fixtures
@@ -59,6 +60,23 @@ def plant_data():
     ]
     }"""
 
+@pytest.fixture()
+def two_plant_data():
+    return """
+    {
+    "plants": [
+        {
+            "id": "123456789009876543210",
+            "name": "My Home",
+            "country": "ES"
+        },
+        {
+            "id": "99999999999999999999",
+            "name": "Office",
+            "country": "NL"
+        }
+    ]
+    }"""
 
 @pytest.fixture()
 def plant_topology():
@@ -578,6 +596,33 @@ def remote_status():
     }
     """
 
+@pytest.fixture()
+def mock_plant_aioresponse(
+    plant_data,
+    two_plant_data,
+):
+    with aioresponses() as mock:
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
+
+        # Second set of calls
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=two_plant_data,
+        )
+
+        # Third set of calls
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
+
+        yield mock
 
 @pytest.fixture()
 def mock_aioresponse(
@@ -590,7 +635,7 @@ def mock_aioresponse(
 ):
     with aioresponses() as mock:
         mock.get(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants",
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
             status=200,
             body=plant_data,
         )
@@ -743,6 +788,19 @@ def test_remote(test_plant):
 
 
 @pytest.fixture()
+def test_automation(test_plant):
+    return homeplusautomation.HomePlusAutomation(
+        plant=test_plant,
+        id="module_id_5",
+        name="Automation Module 1",
+        hw_type="HW type 5",
+        device="Automation",
+        fw="FW5",
+        type="Automation Module Type",
+    )
+
+
+@pytest.fixture()
 def mock_reduced_aioresponse(
     plant_data,
     plant_modules,
@@ -752,7 +810,7 @@ def mock_reduced_aioresponse(
 ):
     with aioresponses() as mock:
         mock.get(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants",
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
             status=200,
             body=plant_data,
         )
@@ -769,7 +827,7 @@ def mock_reduced_aioresponse(
 
         # Second set of calls with reduced topology
         mock.get(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants",
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
             status=200,
             body=plant_data,
         )
@@ -797,7 +855,7 @@ def mock_growing_aioresponse(
 ):
     with aioresponses() as mock:
         mock.get(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants",
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
             status=200,
             body=plant_data,
         )
@@ -814,7 +872,7 @@ def mock_growing_aioresponse(
 
         # Second set of calls with reduced topology
         mock.get(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants",
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
             status=200,
             body=plant_data,
         )
@@ -836,7 +894,7 @@ def mock_growing_aioresponse(
 def partial_error_aioresponse(plant_data, plant_modules, plant_topology):
     with aioresponses() as mock:
         mock.get(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants",
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
             status=200,
             body=plant_data,
         )

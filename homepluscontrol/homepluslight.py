@@ -21,7 +21,7 @@ class HomePlusLight(HomePlusInteractiveModule):
             name (str): Name of the module
             hw_type (str): Hardware type(?) of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
-            fw (str, optional): Firware(?) of the module. Defaults to an empty string.
+            fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
             type (str, optional): Additional type information of the module. Defaults to an empty string.
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """
