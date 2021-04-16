@@ -8,6 +8,7 @@ from .homepluslight import HomePlusLight
 from .homeplusmodule import HomePlusModule
 from .homeplusplug import HomePlusPlug
 from .homeplusremote import HomePlusRemote
+from .homeplusautomation import HomePlusAutomation
 
 PLANT_TOPOLOGY_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/plants/"
 """ API endpoint for the Home+ plant information. """
@@ -19,6 +20,7 @@ MODULE_CLASSES = {
     "light": HomePlusLight,
     "plug": HomePlusPlug,
     "remote": HomePlusRemote,
+    "automation": HomePlusAutomation,
 }
 
 
@@ -134,32 +136,26 @@ class HomePlusPlant:
         """
         # Extract the plant's modules from the topology data structure.
         # The plant modules come from two distinct elements of the topology - the ambients and the modules.
-        flat_modules = []
+        flat_modules = {}
         for ambient in self.topology["plant"]["ambients"]:
             for module in ambient["modules"]:
-                flat_modules.append(module)
+                flat_modules[module["id"]] = module
 
         for module in self.topology["plant"]["modules"]:
-            flat_modules.append(module)
+            flat_modules[module["id"]] = module
 
-        input_module_ids = []
-        for module in flat_modules:
-            input_module_ids.append(module["id"])
-            # Check if the module already exists in the module dict of this plant
-            if module["id"] in self.modules:
-                self._update_module(module)
-            else:
-                self._create_module(module)
+        input_module_ids = set(flat_modules)
+        current_module_ids = set(self.modules)
 
-        # Check if any module should no longer be in this plant's dict
-        modules_to_pop = []
-        for existing_id in self.modules.keys():
-            if existing_id in input_module_ids:
-                continue
-            modules_to_pop.append(existing_id)
-
-        for m in modules_to_pop:
-            self.modules.pop(m, None)
+        # New modules
+        for new_module_id in input_module_ids.difference(current_module_ids):
+            self._create_module(flat_modules[new_module_id])
+        # Modules that already existed
+        for update_module_id in current_module_ids.intersection(input_module_ids):
+            self._update_module(flat_modules[new_module_id])
+        # Modules no longer there
+        for delete_module_id in current_module_ids.difference(input_module_ids):
+            self.modules.pop(delete_module_id, None)
 
     def _parse_module_status(self):
         """Auxiliary method to parse the module status data returned by the API.
@@ -170,34 +166,19 @@ class HomePlusPlant:
         """
         # With the modules identified in the module_status information,
         # we update their status into the modules map of this plant object
-        # TODO: refactor all this repeated code
-        input_module_ids = []
-        for m in self.module_status["modules"].get("lights", []):
-            module_id = m["sender"]["plant"]["module"]["id"]
-            input_module_ids.append(module_id)
-            if module_id in self.modules:
-                self._update_module_base_status(module_id, m)
-                self._update_interactive_module_status(module_id, m)
+        input_module_ids = set()
+        for module_type in MODULE_CLASSES:
+            module_type_key = module_type + "s"
 
-        for m in self.module_status["modules"].get("plugs", []):
-            module_id = m["sender"]["plant"]["module"]["id"]
-            input_module_ids.append(module_id)
-            if module_id in self.modules:
-                self._update_module_base_status(module_id, m)
-                self._update_interactive_module_status(module_id, m)
-
-        for m in self.module_status["modules"].get("remotes", []):
-            module_id = m["sender"]["plant"]["module"]["id"]
-            input_module_ids.append(module_id)
-            if module_id in self.modules:
-                self._update_module_base_status(module_id, m)
-                self._update_remote_status(module_id, m)
+            for m_json in self.module_status["modules"].get(module_type_key, []):
+                module_id = m_json["sender"]["plant"]["module"]["id"]
+                input_module_ids.add(module_id)
+                if module_id in self.modules:
+                    self.modules[module_id].update_state(m_json)
 
         # Check whether any existing modules in the topology have no module status info
         # and if that is the case, then we mark them as unreachable
-        for existing_id in self.modules.keys():
-            if existing_id in input_module_ids:
-                continue
+        for existing_id in set(self.modules).difference(input_module_ids):
             self.modules[existing_id].reachable = False
 
     def _parse_topology_and_modules(self):
@@ -235,43 +216,11 @@ class HomePlusPlant:
                                  contains the latest module data that will be updated into the existing module instance.
         """
         u_module = self.modules[input_module["id"]]
-        u_module.device = input_module["device"]
-        u_module.name = input_module["name"]
-        u_module.hw_type = input_module["hw_type"]
 
-    def _update_module_base_status(self, curr_module_id, input_module):
-        """Update the basic information of an existing module instance in the plant.
-
-        Args:
-            curr_module_id (str): Identifier of the existing module that is to be updated.
-            input_module (dict): Dictionary representing the JSON structure of a module as returned by the API. This
-                                 contains the latest module data that will be updated into the existing module instance.
-        """
-        u_module = self.modules[curr_module_id]
-        u_module.fw = input_module["fw"]
-        u_module.reachable = input_module["reachable"] is True
-
-    def _update_interactive_module_status(self, curr_module_id, input_module):
-        """Update the information of an existing interactive module instance in the plant.
-        This method basically updates the status (on or off) of the interactive module.
-
-        Args:
-            curr_module_id (str): Identifier of the existing interactive module that is to be updated.
-            input_module (dict): Dictionary representing the JSON structure of a module as returned by the API. This
-                                 contains the latest module data that will be updated into the existing module instance.
-        """
-        u_module = self.modules[curr_module_id]
-        u_module.status = input_module["status"]
-        u_module.power = int(input_module["consumptions"][0]["value"])
-
-    def _update_remote_status(self, curr_module_id, input_module):
-        """Update the information of an existing remote module instance in the plant.
-        This method basically updates the battery status of the remote module.
-
-        Args:
-            curr_module_id (str): Identifier of the existing remote module that is to be updated.
-            input_module (dict): Dictionary representing the JSON structure of a module as returned by the API. This
-                                 contains the latest module data that will be updated into the existing module instance.
-        """
-        u_module = self.modules[curr_module_id]
-        u_module.battery = input_module["battery"]
+        # If the device type has changed, then we have to re-create the object of the correct class
+        # This should not really happen if the IDs in the Legrand platform are really unique.
+        if input_module["device"] != u_module.device:
+            self._create_module(input_module)
+        else:
+            u_module.name = input_module["name"]
+            u_module.hw_type = input_module["hw_type"]

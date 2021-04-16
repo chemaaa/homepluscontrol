@@ -46,6 +46,16 @@ class HomePlusInteractiveModule(HomePlusModule):
         """ Return the string representing this module """
         return f"Home+ Interactive Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, status->{self.status}"
 
+    def update_state(self, module_data):
+        """Update the internal state of the module from the input JSON data.
+        
+        Args:
+            module_data (json): JSON data of the module state
+        """
+        super().update_state(module_data)
+        self.status = module_data["status"]
+        self.power = int(module_data["consumptions"][0]["value"])
+
     async def turn_on(self):
         """ Turn on this interactive module """
         if await self.post_status_update(HomePlusInteractiveModule.STATUS_ON):
@@ -97,6 +107,5 @@ class HomePlusInteractiveModule(HomePlusModule):
             dict: JSON representation of the module's status.
         """
         module_data = await super().get_status_update()
-        self.status = module_data["status"]
-        self.power = int(module_data["consumptions"][0]["value"])
+        self.update_state(module_data)
         return module_data

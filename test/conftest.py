@@ -96,6 +96,12 @@ def plant_topology():
                         "hw_type": "NLP",
                         "type": "other",
                         "device": "plug"
+                    },
+                    {
+                        "id": "00001234567890000xxxxxxx",
+                        "name": "Volet Cuisine",
+                        "hw_type": "NBR",
+                        "device": "automation"
                     }
                 ]
             },
@@ -110,6 +116,12 @@ def plant_topology():
                         "hw_type": "NLP",
                         "type": "other",
                         "device": "plug"
+                    },
+                    {
+                        "id": "00001234567890001xxxxxxx",
+                        "name": "Volet Chambre",
+                        "hw_type": "NBR",
+                        "device": "automation"
                     }
                 ]
             },
@@ -191,6 +203,12 @@ def plant_topology_reduced():
                         "hw_type": "NLP",
                         "type": "other",
                         "device": "plug"
+                    },
+                    {
+                        "id": "00001234567890001xxxxxxx",
+                        "name": "Volet Chambre",
+                        "hw_type": "NBR",
+                        "device": "automation"
                     }
                 ]
             },
@@ -351,7 +369,33 @@ def plant_modules():
                 "fw": 42
             }
         ],
-        "automations": [],
+        "automations": [
+            {
+                "reachable": true,
+                "level": 100,
+                "step": 100,
+                "fw": 16,
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "00001234567890000xxxxxxx"
+                        }
+                    }
+                }
+            }, 
+            {
+                "reachable": true,
+                "level": 0,
+                "step": 100,
+                "fw": 21,
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "00001234567890001xxxxxxx"
+                        }
+                    }
+                }
+            }],
         "energymeters": [],
         "remotes": [
             {
@@ -483,7 +527,21 @@ def plant_modules_reduced():
                 "fw": 42
             }
         ],
-        "automations": [],
+        "automations": [
+            {
+                "reachable": true,
+                "level": 0,
+                "step": 100,
+                "fw": 21,
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "00001234567890001xxxxxxx"
+                        }
+                    }
+                }
+            }
+        ],
         "energymeters": [],
         "remotes": [
             {
@@ -542,7 +600,7 @@ def plug_status():
             "fw": 42
         }
     ]
-}
+    }
     """
 
 
@@ -595,6 +653,30 @@ def remote_status():
     ]
     }
     """
+
+
+@pytest.fixture()
+def automation_status():
+    return """
+    {
+    "automations": [
+        {
+            "reachable": true,
+            "level": 0,
+            "step": 100,
+            "fw": 21,
+            "sender": {
+                "plant": {
+                    "module": {
+                        "id": "00001234567890001xxxxxxx"
+                    }
+                }
+            }
+        }
+    ]
+    }
+    """
+
 
 @pytest.fixture()
 def mock_plant_aioresponse(

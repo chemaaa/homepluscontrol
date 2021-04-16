@@ -65,6 +65,15 @@ class HomePlusModule:
             base_url + self.plant.id + "/modules/parameter/id/value/" + self.id
         )
 
+    def update_state(self, module_data):
+        """Update the internal state of the module from the input JSON data.
+        
+        Args:
+            module_data (json): JSON data of the module state
+        """
+        self.reachable = module_data["reachable"] is True
+        self.fw = module_data["fw"]
+
     async def get_status_update(self):
         """Get the current status of the module by calling the corresponding API method
         located at the URL in the `statusUrl` attributes.
@@ -84,6 +93,5 @@ class HomePlusModule:
             status_result = await response.json()
             module_key = list(status_result)[0]
             module_data = status_result[module_key][0]
-            self.reachable = module_data["reachable"] is True
-            self.fw = module_data["fw"]
+            self.update_state(module_data)
         return module_data
