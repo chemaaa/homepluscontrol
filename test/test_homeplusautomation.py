@@ -36,14 +36,14 @@ def test_automation_read_status(async_mock_plant):
     assert mock_automation.fw == 21
 
 
-def test_automation_high_level(async_mock_plant):
+def test_automation_high_level(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
     mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
 
     for invalid_level in [101, 1000, 100.1, 901]:
         with patch(
             "homepluscontrol.homeplusautomation.HomePlusAutomation.post_status_update",
-            return_value=True,
+            return_value=mock_automation_post,
         ) as mock_post:
             loop.run_until_complete(mock_automation.set_level(invalid_level))
 
@@ -51,14 +51,14 @@ def test_automation_high_level(async_mock_plant):
         assert mock_automation.level == HomePlusAutomation.OPEN_FULL
 
 
-def test_automation_low_level(async_mock_plant):
+def test_automation_low_level(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
     mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
 
     for invalid_level in [-2, -1.01, -999, -0.1]:
         with patch(
             "homepluscontrol.homeplusautomation.HomePlusAutomation.post_status_update",
-            return_value=True,
+            return_value=mock_automation_post,
         ) as mock_post:
             loop.run_until_complete(mock_automation.set_level(invalid_level))
 
@@ -68,7 +68,7 @@ def test_automation_low_level(async_mock_plant):
     # Test for the special -1 case
     with patch(
         "homepluscontrol.homeplusautomation.HomePlusAutomation.post_status_update",
-        return_value=True,
+        return_value=mock_automation_post,
     ) as mock_post:
         loop.run_until_complete(mock_automation.set_level(-1))
 
@@ -76,7 +76,7 @@ def test_automation_low_level(async_mock_plant):
     assert mock_automation.level == HomePlusAutomation.STOP_MOTION
 
 
-def test_automation_open(async_mock_plant):
+def test_automation_open(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
     mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
 
@@ -84,7 +84,7 @@ def test_automation_open(async_mock_plant):
 
     with patch(
         "homepluscontrol.homeplusautomation.HomePlusAutomation.post_status_update",
-        return_value=True,
+        return_value=mock_automation_post,
     ) as mock_post:
         loop.run_until_complete(mock_automation.open())
 
@@ -92,7 +92,7 @@ def test_automation_open(async_mock_plant):
     assert mock_automation.level == HomePlusAutomation.OPEN_FULL
 
 
-def test_automation_close(async_mock_plant):
+def test_automation_close(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
     mock_automation = mock_plant.modules["00001234567890000xxxxxxx"]
 
@@ -100,7 +100,7 @@ def test_automation_close(async_mock_plant):
 
     with patch(
         "homepluscontrol.homeplusautomation.HomePlusAutomation.post_status_update",
-        return_value=True,
+        return_value=mock_automation_post,
     ) as mock_post:
         loop.run_until_complete(mock_automation.close())
 

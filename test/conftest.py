@@ -1,6 +1,7 @@
 import asyncio
 import re
 import time
+import unittest
 
 import pytest
 from aioresponses import aioresponses
@@ -14,6 +15,7 @@ from homepluscontrol import (
     homeplusautomation,
 )
 
+    
 # Test fixtures
 client_id = "client_identifier"
 client_secret = "client_secret"
@@ -1004,3 +1006,10 @@ def async_mock_plant(mock_aioresponse, test_client):
     )
     loop.run_until_complete(mock_plant.update_topology_and_modules())
     return mock_plant, loop
+
+
+@pytest.fixture()
+def mock_automation_post():
+    future = asyncio.Future()
+    future.set_result(True)
+    return future
