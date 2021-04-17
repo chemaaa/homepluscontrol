@@ -39,19 +39,9 @@ class HomePlusRemote(HomePlusModule):
 
     def update_state(self, module_data):
         """Update the internal state of the module from the input JSON data.
-        
+
         Args:
             module_data (json): JSON data of the module state
         """
         super().update_state(module_data)
         self.battery = module_data["battery"]
-
-    async def get_status_update(self):
-        """Get the current status of the module by calling the corresponding API method.
-
-        Returns:
-            dict: JSON representation of the module's status.
-        """
-        module_data = await super().get_status_update()
-        self.update_state(module_data)
-        return module_data

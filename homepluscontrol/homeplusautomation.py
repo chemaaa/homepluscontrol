@@ -21,6 +21,9 @@ class HomePlusAutomation(HomePlusModule):
     CLOSED_FULL = 0
     """Level value that represents a fully closed cover."""
 
+    STOP_MOTION = -1
+    """Level value to send to the API to make the automation stop."""
+
     def __init__(
         self, plant, id, name, hw_type, device, fw="", type="", reachable=False
     ):
@@ -44,23 +47,42 @@ class HomePlusAutomation(HomePlusModule):
         """ Return the string representing this module """
         return f"Home+ Automation Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, level->{self.level}"
 
+    def update_state(self, module_data):
+        """Update the internal state of the module from the input JSON data.
+
+        Args:
+            module_data (json): JSON data of the module state
+        """
+        super().update_state(module_data)
+        self.level = module_data["level"]
+
     async def open(self):
-        """ Open the automation module """
-        self.set_level(HomePlusAutomation.OPEN_FULL)
+        """ Open the automation module.
+
+        This method will indicate the automation to go to the fully open position.
+        """
+        await self.set_level(HomePlusAutomation.OPEN_FULL)
 
     async def close(self):
-        """ Close the automation module """
-        self.set_level(HomePlusAutomation.CLOSED_FULL)
+        """ Close the automation module.
+
+        This method will indicate the automation to go to the fully closed position.
+        """
+        await self.set_level(HomePlusAutomation.CLOSED_FULL)
+
+    async def stop(self):
+        """Stop the motion of the automation module."""
+        await self.set_level(HomePlusAutomation.STOP_MOTION)
 
     async def set_level(self, desired_level):
         """Set the level of the automation module."""
-        if desired_level < 0:
+        if desired_level < 0 and desired_level != -1:
             desired_level = 0
         if desired_level > 100:
             desired_level = 100
 
         if await self.post_status_update(desired_level):
-            self.level = desired_level
+            self.level = desired_level  # TODO: What level to set when a stop action is provided?
 
     async def post_status_update(self, desired_level):
         """Call the API method to act on the module's status.
@@ -76,23 +98,13 @@ class HomePlusAutomation(HomePlusModule):
 
         desired_level_data = '{ "ids": ["string"], "level":' + str(desired_level) + '}'
         try:
-            response = await oauth_client.post_request(
+            await oauth_client.post_request(
                 self.statusUrl, data=desired_level_data
             )
-        except aiohttp.ClientResponseError as err:
+        except aiohttp.ClientResponseError:
             self.logger.error(
                 "HTTP client response error when posting module status"
             )
         else:
             update_status_result = True
         return update_status_result
-
-    async def get_status_update(self):
-        """Get the current status of the module by calling the corresponding API method.
-
-        Returns:
-            dict: JSON representation of the module's status.
-        """
-        module_data = await super().get_status_update()
-        self.level = module_data["level"]
-        return module_data

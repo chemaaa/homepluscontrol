@@ -48,7 +48,7 @@ class HomePlusInteractiveModule(HomePlusModule):
 
     def update_state(self, module_data):
         """Update the internal state of the module from the input JSON data.
-        
+
         Args:
             module_data (json): JSON data of the module state
         """
@@ -89,23 +89,13 @@ class HomePlusInteractiveModule(HomePlusModule):
         oauth_client = self.plant.oauth_client
         update_status_result = False
         try:
-            response = await oauth_client.post_request(
+            await oauth_client.post_request(
                 self.statusUrl, data=desired_end_status
             )
-        except aiohttp.ClientResponseError as err:
+        except aiohttp.ClientResponseError:
             self.logger.error(
                 "HTTP client response error when posting module status"
             )
         else:
             update_status_result = True
         return update_status_result
-
-    async def get_status_update(self):
-        """Get the current status of the module by calling the corresponding API method.
-
-        Returns:
-            dict: JSON representation of the module's status.
-        """
-        module_data = await super().get_status_update()
-        self.update_state(module_data)
-        return module_data

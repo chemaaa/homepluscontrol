@@ -17,6 +17,7 @@ TEST_UPDATE_INTERVALS = {
     CONF_MODULE_STATUS_UPDATE_INTERVAL: -1,
 }
 
+
 # Implement a dummy class for testing
 class MockHomePlusControlAPI(homeplusapi.HomePlusControlAPI):
 
@@ -36,10 +37,11 @@ def test_handle_plant_data(mock_plant_aioresponse, test_client):
     assert len(test_api._plants) == 1
     # Run again - two plants
     loop.run_until_complete(test_api.async_handle_plant_data())
-    assert len(test_api._plants) == 2    
+    assert len(test_api._plants) == 2
     # Run thrice - back to one plant
     loop.run_until_complete(test_api.async_handle_plant_data())
     assert len(test_api._plants) == 1
+
 
 def test_handle_module_status(mock_aioresponse, test_client):
     loop = asyncio.get_event_loop()
