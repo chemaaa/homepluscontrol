@@ -67,7 +67,7 @@ class HomePlusModule:
 
     def update_state(self, module_data):
         """Update the internal state of the module from the input JSON data.
-        
+
         Args:
             module_data (json): JSON data of the module state
         """

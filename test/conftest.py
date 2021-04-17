@@ -60,6 +60,7 @@ def plant_data():
     ]
     }"""
 
+
 @pytest.fixture()
 def two_plant_data():
     return """
@@ -77,6 +78,7 @@ def two_plant_data():
         }
     ]
     }"""
+
 
 @pytest.fixture()
 def plant_topology():
@@ -382,7 +384,7 @@ def plant_modules():
                         }
                     }
                 }
-            }, 
+            },
             {
                 "reachable": true,
                 "level": 0,
@@ -706,6 +708,7 @@ def mock_plant_aioresponse(
 
         yield mock
 
+
 @pytest.fixture()
 def mock_aioresponse(
     plant_data,
@@ -991,6 +994,7 @@ def partial_error_aioresponse(plant_data, plant_modules, plant_topology):
         )
 
         yield mock
+
 
 @pytest.fixture()
 def async_mock_plant(mock_aioresponse, test_client):
