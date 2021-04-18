@@ -77,12 +77,15 @@ class HomePlusAutomation(HomePlusModule):
     async def set_level(self, desired_level):
         """Set the level of the automation module."""
         if desired_level < 0 and desired_level != -1:
-            desired_level = 0
+            desired_level = HomePlusAutomation.CLOSED_FULL
         if desired_level > 100:
-            desired_level = 100
+            desired_level = HomePlusAutomation.OPEN_FULL
 
         if await self.post_status_update(desired_level):
-            self.level = desired_level  # TODO: What level to set when a stop action is provided?
+            if desired_level != HomePlusAutomation.STOP_MOTION:
+                self.level = desired_level  # Not being stopped, so assume final level is the requested level
+            else:
+                await self.get_status_update()  # Stop command issued - need to read the final level
 
     async def post_status_update(self, desired_level):
         """Call the API method to act on the module's status.

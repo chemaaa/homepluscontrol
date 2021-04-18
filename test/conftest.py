@@ -1,7 +1,6 @@
 import asyncio
 import re
 import time
-import unittest
 
 import pytest
 from aioresponses import aioresponses
@@ -15,7 +14,7 @@ from homepluscontrol import (
     homeplusautomation,
 )
 
-    
+
 # Test fixtures
 client_id = "client_identifier"
 client_secret = "client_secret"
@@ -666,7 +665,7 @@ def automation_status():
     "automations": [
         {
             "reachable": true,
-            "level": 0,
+            "level": 87,
             "step": 100,
             "fw": 21,
             "sender": {
@@ -719,6 +718,7 @@ def mock_aioresponse(
     plug_status,
     light_status,
     remote_status,
+    automation_status,
 ):
     with aioresponses() as mock:
         mock.get(
@@ -761,6 +761,12 @@ def mock_aioresponse(
             "https://api.developer.legrand.com/hc/api/v1.0/remote/remote/addressLocation/plants/123456789009876543210/modules/parameter/id/value/000000012345678abcdef",
             status=200,
             body=remote_status,
+        )
+
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/automation/automation/addressLocation/plants/123456789009876543210/modules/parameter/id/value/00001234567890001xxxxxxx",
+            status=200,
+            body=automation_status,
         )
 
         # Second set of calls

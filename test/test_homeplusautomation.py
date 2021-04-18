@@ -73,7 +73,7 @@ def test_automation_low_level(async_mock_plant, mock_automation_post):
         loop.run_until_complete(mock_automation.set_level(-1))
 
     assert len(mock_post.mock_calls) == 1
-    assert mock_automation.level == HomePlusAutomation.STOP_MOTION
+    assert mock_automation.level == 87  # Value returned by mock "get_status_update" request
 
 
 def test_automation_open(async_mock_plant, mock_automation_post):
@@ -106,3 +106,30 @@ def test_automation_close(async_mock_plant, mock_automation_post):
 
     assert len(mock_post.mock_calls) == 1
     assert mock_automation.level == HomePlusAutomation.CLOSED_FULL
+
+
+def test_automation_stop(async_mock_plant, mock_automation_post):
+    mock_plant, loop = async_mock_plant
+    mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
+
+    assert mock_automation.level == HomePlusAutomation.CLOSED_FULL  # Automation is closed
+
+    with patch(
+        "homepluscontrol.homeplusautomation.HomePlusAutomation.post_status_update",
+        return_value=mock_automation_post,
+    ) as mock_post:
+        loop.run_until_complete(mock_automation.open())
+
+    # Automation "starts" to open - the level value is assumed to be the final requested level
+    assert len(mock_post.mock_calls) == 1
+    assert mock_automation.level == HomePlusAutomation.OPEN_FULL
+
+    # But while closing, we issue the stop command - so the final level value has to be read from the API
+    with patch(
+        "homepluscontrol.homeplusautomation.HomePlusAutomation.post_status_update",
+        return_value=mock_automation_post,
+    ) as mock_post:
+        loop.run_until_complete(mock_automation.stop())
+
+    assert len(mock_post.mock_calls) == 1
+    assert mock_automation.level == 87  # Value returned by mock "get_status_update" request
