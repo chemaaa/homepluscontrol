@@ -4,14 +4,16 @@ primarily intended for integration into Smart Home platforms such as Home Assist
 
 More information of the API can be found here: https://developer.legrand.com/
 
-The library currently supports 3 types of Legrand modules:
+The library currently supports 4 types of Legrand modules:
 
 1) Plugs (power outlets)
 2) Lights (connected switches)
 3) Remotes (wireless switches)
+4) Automations (shutters/covers)
 
 The first two - plugs and lights - are modeled as basic switches that can be interacted with to set their status to *on* or *off*.
 Remotes are presented as passive modules that only have a battery level attribute.
+Automations can be issued commands to open or close to their full positions and to be stopped during the motion.
 
 A 'home' is represented by a *plant* which presents all of its corresponding modules in a topology. A *plant* is basically a 
 Legrand Home+ Control gateway.
