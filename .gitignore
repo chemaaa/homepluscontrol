@@ -131,3 +131,4 @@ dmypy.json
 .DS_Store
 access_token
 __main__.py
+scratch.py
