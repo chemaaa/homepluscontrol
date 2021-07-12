@@ -102,7 +102,7 @@ class HomePlusAutomation(HomePlusModule):
         desired_level_data = '{ "ids": ["string"], "level":' + str(desired_level) + '}'
         try:
             await oauth_client.post_request(
-                self.statusUrl, data=desired_level_data
+                self.statusUrl, data=desired_level_data, headers={"Content-Type": "application/json"}
             )
         except aiohttp.ClientResponseError:
             self.logger.error(
