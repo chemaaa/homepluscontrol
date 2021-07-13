@@ -34,9 +34,7 @@ class AbstractHomePlusOAuth2Async(ABC):
                                                  requests
         """
         self.subscription_key = subscription_key
-        self._subscription_header = {
-            "Ocp-Apim-Subscription-Key": self.subscription_key
-        }
+        self._subscription_header = {"Ocp-Apim-Subscription-Key": self.subscription_key}
 
         if oauth_client is None:
             self.oauth_client = ClientSession()
@@ -82,7 +80,7 @@ class AbstractHomePlusOAuth2Async(ABC):
         access_token = await self.async_get_access_token()
         kwargs["headers"] = {
             **kwargs["headers"],
-            "authorization": f"Bearer {access_token}",
+            "authorization": f'Bearer {access_token["access_token"] if access_token else None}',
         }
         return await self.oauth_client.request(method, url, **kwargs)
 
@@ -328,9 +326,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
 
-        resp = await self.oauth_client.post(
-            HomePlusOAuth2Async.TOKEN_URL, data=data
-        )
+        resp = await self.oauth_client.post(HomePlusOAuth2Async.TOKEN_URL, data=data)
         resp.raise_for_status()
 
         self.token = cast(dict, await resp.json())
