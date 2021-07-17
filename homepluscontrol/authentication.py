@@ -82,7 +82,7 @@ class AbstractHomePlusOAuth2Async(ABC):
         access_token = await self.async_get_access_token()
         kwargs["headers"] = {
             **kwargs["headers"],
-            "authorization": f"Bearer {access_token}",
+            "authorization": f'Bearer {access_token["access_token"] if access_token else None}',
         }
         return await self.oauth_client.request(method, url, **kwargs)
 
