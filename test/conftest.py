@@ -4,30 +4,41 @@ import time
 
 import pytest
 from aioresponses import aioresponses
+from homepluscontrol import (
+    authentication,
+    homepluslight,
+    homeplusmodule,
+    homeplusplant,
+    homeplusplug,
+    homeplusremote,
+    homeplusautomation,
+)
 
-from homepluscontrol import (authentication, homepluslight, homeplusmodule,
-                             homeplusplant, homeplusplug, homeplusremote)
 
 # Test fixtures
 client_id = "client_identifier"
 client_secret = "client_secret"
 subscription_key = "subscription_key"
-redirect_uri="https://www.dummy.com:1123/auth"
-token = { "access_token" : "AcCeSs_ToKeN",
-          "refresh_token" : "ReFrEsH_ToKeN",
-          "expires_in" : -1,
-          "expires_on" : time.time() + 500 }
+redirect_uri = "https://www.dummy.com:1123/auth"
+token = {
+    "access_token": "AcCeSs_ToKeN",
+    "refresh_token": "ReFrEsH_ToKeN",
+    "expires_in": -1,
+    "expires_on": time.time() + 500,
+}
+
 
 @pytest.fixture()
 def test_client():
-
     async def create_client():
-        return authentication.HomePlusOAuth2Async(client_id = client_id,
-                                                  client_secret = client_secret,
-                                                  subscription_key = subscription_key,
-                                                  redirect_uri = redirect_uri,
-                                                  token = token)
-    
+        return authentication.HomePlusOAuth2Async(
+            client_id=client_id,
+            client_secret=client_secret,
+            subscription_key=subscription_key,
+            redirect_uri=redirect_uri,
+            token=token,
+        )
+
     async def close_client(client):
         await client.oauth_client.close()
 
@@ -35,6 +46,7 @@ def test_client():
     client = loop.run_until_complete(create_client())
     yield client
     loop.run_until_complete(close_client(client))
+
 
 @pytest.fixture()
 def plant_data():
@@ -48,6 +60,26 @@ def plant_data():
         }
     ]
     }"""
+
+
+@pytest.fixture()
+def two_plant_data():
+    return """
+    {
+    "plants": [
+        {
+            "id": "123456789009876543210",
+            "name": "My Home",
+            "country": "ES"
+        },
+        {
+            "id": "99999999999999999999",
+            "name": "Office",
+            "country": "NL"
+        }
+    ]
+    }"""
+
 
 @pytest.fixture()
 def plant_topology():
@@ -67,6 +99,12 @@ def plant_topology():
                         "hw_type": "NLP",
                         "type": "other",
                         "device": "plug"
+                    },
+                    {
+                        "id": "00001234567890000xxxxxxx",
+                        "name": "Volet Cuisine",
+                        "hw_type": "NBR",
+                        "device": "automation"
                     }
                 ]
             },
@@ -81,6 +119,12 @@ def plant_topology():
                         "hw_type": "NLP",
                         "type": "other",
                         "device": "plug"
+                    },
+                    {
+                        "id": "00001234567890001xxxxxxx",
+                        "name": "Volet Chambre",
+                        "hw_type": "NBR",
+                        "device": "automation"
                     }
                 ]
             },
@@ -139,8 +183,9 @@ def plant_topology():
             }
         ]
     }
-    }   
+    }
     """
+
 
 # Change in the plant topology
 @pytest.fixture()
@@ -161,6 +206,12 @@ def plant_topology_reduced():
                         "hw_type": "NLP",
                         "type": "other",
                         "device": "plug"
+                    },
+                    {
+                        "id": "00001234567890001xxxxxxx",
+                        "name": "Volet Chambre",
+                        "hw_type": "NBR",
+                        "device": "automation"
                     }
                 ]
             },
@@ -213,8 +264,9 @@ def plant_topology_reduced():
             }
         ]
     }
-    }   
+    }
     """
+
 
 @pytest.fixture()
 def plant_modules():
@@ -268,7 +320,7 @@ def plant_modules():
                 "consumptions": [
                     {
                         "unit": "watt",
-                        "value": 0,
+                        "value": 89,
                         "timestamp": "2020-11-22T11:03:05+00:00"
                     }
                 ],
@@ -320,7 +372,33 @@ def plant_modules():
                 "fw": 42
             }
         ],
-        "automations": [],
+        "automations": [
+            {
+                "reachable": true,
+                "level": 100,
+                "step": 100,
+                "fw": 16,
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "00001234567890000xxxxxxx"
+                        }
+                    }
+                }
+            },
+            {
+                "reachable": true,
+                "level": 0,
+                "step": 100,
+                "fw": 21,
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "00001234567890001xxxxxxx"
+                        }
+                    }
+                }
+            }],
         "energymeters": [],
         "remotes": [
             {
@@ -364,6 +442,7 @@ def plant_modules():
     }
     }
     """
+
 
 # Change the module status response
 @pytest.fixture()
@@ -451,7 +530,21 @@ def plant_modules_reduced():
                 "fw": 42
             }
         ],
-        "automations": [],
+        "automations": [
+            {
+                "reachable": true,
+                "level": 0,
+                "step": 100,
+                "fw": 21,
+                "sender": {
+                    "plant": {
+                        "module": {
+                            "id": "00001234567890001xxxxxxx"
+                        }
+                    }
+                }
+            }
+        ],
         "energymeters": [],
         "remotes": [
             {
@@ -484,6 +577,7 @@ def plant_modules_reduced():
     }
     """
 
+
 @pytest.fixture()
 def plug_status():
     return """
@@ -495,7 +589,7 @@ def plug_status():
             "consumptions": [
                 {
                     "unit": "watt",
-                    "value": 0,
+                    "value": 1999,
                     "timestamp": "2020-11-22T11:14:14+00:00"
                 }
             ],
@@ -509,8 +603,9 @@ def plug_status():
             "fw": 42
         }
     ]
-}
+    }
     """
+
 
 @pytest.fixture()
 def light_status():
@@ -540,6 +635,7 @@ def light_status():
     }
     """
 
+
 @pytest.fixture()
 def remote_status():
     return """
@@ -561,41 +657,158 @@ def remote_status():
     }
     """
 
+
 @pytest.fixture()
-def mock_aioresponse(plant_data, 
-                     plant_modules, 
-                     plant_topology,
-                     plug_status,
-                     light_status,
-                     remote_status):
+def automation_status():
+    return """
+    {
+    "automations": [
+        {
+            "reachable": true,
+            "level": 87,
+            "step": 100,
+            "fw": 21,
+            "sender": {
+                "plant": {
+                    "module": {
+                        "id": "00001234567890001xxxxxxx"
+                    }
+                }
+            }
+        }
+    ]
+    }
+    """
+
+
+@pytest.fixture()
+def mock_plant_aioresponse(
+    plant_data,
+    two_plant_data,
+):
     with aioresponses() as mock:
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
-
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plug/energy/addressLocation/plants/123456789009876543210/modules/parameter/id/value/0000000587654321fedcba', status=200, body=plug_status)
-        mock.post('https://api.developer.legrand.com/hc/api/v1.0/plug/energy/addressLocation/plants/123456789009876543210/modules/parameter/id/value/0000000587654321fedcba', status=200)
-
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/light/lighting/addressLocation/plants/123456789009876543210/modules/parameter/id/value/0000000787654321fedcba', status=200, body=light_status)
-        mock.post('https://api.developer.legrand.com/hc/api/v1.0/light/lighting/addressLocation/plants/123456789009876543210/modules/parameter/id/value/0000000787654321fedcba', status=200)
-
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/remote/remote/addressLocation/plants/123456789009876543210/modules/parameter/id/value/000000012345678abcdef', status=200, body=remote_status)
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
 
         # Second set of calls
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=two_plant_data,
+        )
 
         # Third set of calls
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
 
         yield mock
 
+
+@pytest.fixture()
+def mock_aioresponse(
+    plant_data,
+    plant_modules,
+    plant_topology,
+    plug_status,
+    light_status,
+    remote_status,
+    automation_status,
+):
+    with aioresponses() as mock:
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210",
+            status=200,
+            body=plant_modules,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology",
+            status=200,
+            body=plant_topology,
+        )
+
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plug/energy/addressLocation/plants/123456789009876543210/modules/parameter/id/value/0000000587654321fedcba",
+            status=200,
+            body=plug_status,
+        )
+        mock.post(
+            "https://api.developer.legrand.com/hc/api/v1.0/plug/energy/addressLocation/plants/123456789009876543210/modules/parameter/id/value/0000000587654321fedcba",
+            status=200,
+        )
+
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/light/lighting/addressLocation/plants/123456789009876543210/modules/parameter/id/value/0000000787654321fedcba",
+            status=200,
+            body=light_status,
+        )
+        mock.post(
+            "https://api.developer.legrand.com/hc/api/v1.0/light/lighting/addressLocation/plants/123456789009876543210/modules/parameter/id/value/0000000787654321fedcba",
+            status=200,
+        )
+
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/remote/remote/addressLocation/plants/123456789009876543210/modules/parameter/id/value/000000012345678abcdef",
+            status=200,
+            body=remote_status,
+        )
+
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/automation/automation/addressLocation/plants/123456789009876543210/modules/parameter/id/value/00001234567890001xxxxxxx",
+            status=200,
+            body=automation_status,
+        )
+
+        # Second set of calls
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants",
+            status=200,
+            body=plant_data,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210",
+            status=200,
+            body=plant_modules,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology",
+            status=200,
+            body=plant_topology,
+        )
+
+        # Third set of calls
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants",
+            status=200,
+            body=plant_data,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210",
+            status=200,
+            body=plant_modules,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology",
+            status=200,
+            body=plant_topology,
+        )
+
+        yield mock
+
+
 @pytest.fixture()
 def error_aioresponse():
-    pattern = re.compile(r'^https://api.developer.legrand.com/hc.*$')
+    pattern = re.compile(r"^https://api.developer.legrand.com/hc.*$")
     with aioresponses() as mock:
         mock.get(pattern, status=400)  # Invalid arguments
         mock.get(pattern, status=403)  # Operation forbidden
@@ -603,97 +816,206 @@ def error_aioresponse():
         mock.get(pattern, status=406)  # Request not acceptable
         mock.get(pattern, status=500)  # Internal error
         yield mock
-    
+
+
 @pytest.fixture()
 def test_plant(test_client):
-    return homeplusplant.HomePlusPlant(id = "mock_plant_1",
-                                         name = "Mock Plant",
-                                         country = "The World",
-                                         oauth_client = test_client)   
+    return homeplusplant.HomePlusPlant(
+        id="mock_plant_1",
+        name="Mock Plant",
+        country="The World",
+        oauth_client=test_client,
+    )
+
 
 @pytest.fixture()
 def test_module(test_plant):
-    return homeplusmodule.HomePlusModule(plant = test_plant,
-                                       id = "module_id",
-                                       name = "Test Module 1",
-                                       hw_type = "HW type 1",
-                                       device = "Base Module",
-                                       fw = "FW1",
-                                       type = "Base Module Type")
+    return homeplusmodule.HomePlusModule(
+        plant=test_plant,
+        id="module_id",
+        name="Test Module 1",
+        hw_type="HW type 1",
+        device="Base Module",
+        fw="FW1",
+        type="Base Module Type",
+    )
+
 
 @pytest.fixture()
 def test_plug(test_plant):
-    return homeplusplug.HomePlusPlug(plant = test_plant,
-                                       id = "module_id_2",
-                                       name = "Plug Module 1",
-                                       hw_type = "HW type 2",
-                                       device = "Plug",
-                                       fw = "FW2",
-                                       type = "Plug Module Type")
+    return homeplusplug.HomePlusPlug(
+        plant=test_plant,
+        id="module_id_2",
+        name="Plug Module 1",
+        hw_type="HW type 2",
+        device="Plug",
+        fw="FW2",
+        type="Plug Module Type",
+    )
+
 
 @pytest.fixture()
 def test_light(test_plant):
-    return homepluslight.HomePlusLight(plant = test_plant,
-                                       id = "module_id_3",
-                                       name = "Light Module 1",
-                                       hw_type = "HW type 3",
-                                       device = "Light",
-                                       fw = "FW3",
-                                       type = "Light Module Type")
+    return homepluslight.HomePlusLight(
+        plant=test_plant,
+        id="module_id_3",
+        name="Light Module 1",
+        hw_type="HW type 3",
+        device="Light",
+        fw="FW3",
+        type="Light Module Type",
+    )
+
 
 @pytest.fixture()
 def test_remote(test_plant):
-    return homeplusremote.HomePlusRemote(plant = test_plant,
-                                       id = "module_id_4",
-                                       name = "Remote Module 1",
-                                       hw_type = "HW type 4",
-                                       device = "Remote",
-                                       fw = "FW4",
-                                       type = "Remote Module Type")
+    return homeplusremote.HomePlusRemote(
+        plant=test_plant,
+        id="module_id_4",
+        name="Remote Module 1",
+        hw_type="HW type 4",
+        device="Remote",
+        fw="FW4",
+        type="Remote Module Type",
+    )
+
 
 @pytest.fixture()
-def mock_reduced_aioresponse(plant_data, 
-                     plant_modules, 
-                     plant_topology,
-                     plant_topology_reduced,
-                     plant_modules_reduced):
+def test_automation(test_plant):
+    return homeplusautomation.HomePlusAutomation(
+        plant=test_plant,
+        id="module_id_5",
+        name="Automation Module 1",
+        hw_type="HW type 5",
+        device="Automation",
+        fw="FW5",
+        type="Automation Module Type",
+    )
+
+
+@pytest.fixture()
+def mock_reduced_aioresponse(
+    plant_data,
+    plant_modules,
+    plant_topology,
+    plant_topology_reduced,
+    plant_modules_reduced,
+):
     with aioresponses() as mock:
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210",
+            status=200,
+            body=plant_modules,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology",
+            status=200,
+            body=plant_topology,
+        )
 
         # Second set of calls with reduced topology
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules_reduced)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology_reduced)
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210",
+            status=200,
+            body=plant_modules_reduced,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology",
+            status=200,
+            body=plant_topology_reduced,
+        )
 
         yield mock
 
+
 @pytest.fixture()
-def mock_growing_aioresponse(plant_data, 
-                     plant_modules, 
-                     plant_topology,
-                     plant_topology_reduced,
-                     plant_modules_reduced):
+def mock_growing_aioresponse(
+    plant_data,
+    plant_modules,
+    plant_topology,
+    plant_topology_reduced,
+    plant_modules_reduced,
+):
     with aioresponses() as mock:
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules_reduced)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology_reduced)
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210",
+            status=200,
+            body=plant_modules_reduced,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology",
+            status=200,
+            body=plant_topology_reduced,
+        )
 
         # Second set of calls with reduced topology
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=200, body=plant_modules)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
-
-        yield mock        
-
-@pytest.fixture()
-def partial_error_aioresponse(plant_data, 
-                            plant_modules, 
-                            plant_topology):
-    with aioresponses() as mock:
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants', status=200, body=plant_data)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology', status=200, body=plant_topology)
-        mock.get('https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210', status=500)
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210",
+            status=200,
+            body=plant_modules,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology",
+            status=200,
+            body=plant_topology,
+        )
 
         yield mock
+
+
+@pytest.fixture()
+def partial_error_aioresponse(plant_data, plant_modules, plant_topology):
+    with aioresponses() as mock:
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/",
+            status=200,
+            body=plant_data,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210/topology",
+            status=200,
+            body=plant_topology,
+        )
+        mock.get(
+            "https://api.developer.legrand.com/hc/api/v1.0/plants/123456789009876543210",
+            status=500,
+        )
+
+        yield mock
+
+
+@pytest.fixture()
+def async_mock_plant(mock_aioresponse, test_client):
+    loop = asyncio.get_event_loop()
+    mock_plant = homeplusplant.HomePlusPlant(
+        "123456789009876543210", "My Home", "ES", test_client
+    )
+    loop.run_until_complete(mock_plant.update_topology_and_modules())
+    return mock_plant, loop
+
+
+@pytest.fixture()
+def mock_automation_post():
+    future = asyncio.Future()
+    future.set_result(True)
+    return future
