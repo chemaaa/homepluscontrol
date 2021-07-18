@@ -4,8 +4,9 @@ import logging
 import time
 
 from .authentication import AbstractHomePlusOAuth2Async
-from .homeplusplant import HomePlusPlant, PLANT_TOPOLOGY_BASE_URL
+from .homeplusautomation import HomePlusAutomation
 from .homeplusinteractivemodule import HomePlusInteractiveModule
+from .homeplusplant import HomePlusPlant, PLANT_TOPOLOGY_BASE_URL
 
 CONF_PLANT_UPDATE_INTERVAL = "plant_update_interval"
 CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL = "plant_topology_update_interval"
@@ -272,7 +273,7 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
             # and light switches. All other modules are discarded/ignored.
             current_module_ids = set()
             for module in list(plant.modules.values()):
-                if isinstance(module, HomePlusInteractiveModule):
+                if isinstance(module, HomePlusInteractiveModule, HomePlusAutomation):
                     current_module_ids.add(module.id)
                     if module.id not in self._modules:
                         self.logger.debug(
