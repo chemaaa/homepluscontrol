@@ -51,8 +51,10 @@ def test_handle_module_status(mock_aioresponse, test_client):
     assert len(test_api._plants) == 1
 
     loop.run_until_complete(test_api.async_handle_module_status())
-    assert len(test_api._modules) == 5
+    assert len(test_api._modules) == 10
     # Light is in the API modules
-    assert '0000000987654321fedcba' in test_api._modules
-    # But remote is not in the API modules
-    assert '000000012345678abcdef' not in test_api._modules
+    assert "0000000987654321fedcba" in test_api._modules
+    # Remote is in the API modules
+    assert "000000012345678abcdef" in test_api._modules
+    # Automation is in the API modules
+    assert "00001234567890001xxxxxxx" in test_api._modules
