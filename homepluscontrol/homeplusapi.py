@@ -5,7 +5,6 @@ import time
 
 from .authentication import AbstractHomePlusOAuth2Async
 from .homeplusplant import HomePlusPlant, PLANT_TOPOLOGY_BASE_URL
-from .homeplusinteractivemodule import HomePlusInteractiveModule
 
 CONF_PLANT_UPDATE_INTERVAL = "plant_update_interval"
 CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL = "plant_topology_update_interval"
@@ -267,19 +266,15 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
             dict: Dictionary of modules across all of the plants.
         """
         for plant in self._plants.values():
-            # Loop through the modules in the plant and we only keep the ones that are "interactive"
-            # and can be represented by a switch, i.e. power outlets, micromodules
-            # and light switches. All other modules are discarded/ignored.
             current_module_ids = set()
             for module in list(plant.modules.values()):
-                if isinstance(module, HomePlusInteractiveModule):
-                    current_module_ids.add(module.id)
-                    if module.id not in self._modules:
-                        self.logger.debug(
-                            "Registering Home+ Control module in internal map: %s.",
-                            str(module),
-                        )
-                        self._modules[module.id] = module
+                current_module_ids.add(module.id)
+                if module.id not in self._modules:
+                    self.logger.debug(
+                        "Registering Home+ Control module in internal map: %s.",
+                        str(module),
+                    )
+                    self._modules[module.id] = module
 
             # Discard modules that may have disappeared from the topology
             modules_to_pop = set(self._modules) - current_module_ids
