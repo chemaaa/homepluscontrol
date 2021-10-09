@@ -152,7 +152,7 @@ class HomePlusPlant:
             self._create_module(flat_modules[new_module_id])
         # Modules that already existed
         for update_module_id in current_module_ids.intersection(input_module_ids):
-            self._update_module(flat_modules[new_module_id])
+            self._update_module(flat_modules[update_module_id])
         # Modules no longer there
         for delete_module_id in current_module_ids.difference(input_module_ids):
             self.modules.pop(delete_module_id, None)
