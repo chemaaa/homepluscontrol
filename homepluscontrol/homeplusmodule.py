@@ -13,14 +13,14 @@ class HomePlusModule:
         name (str): Name of the module
         hw_type (str): Hardware type(?) of the module (NLP, NLT, NLF)
         device (str): Type of the device (plug, light, remote)
-        fw (str, optional): Firware(?) of the module. Defaults to an empty string.
+        fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
         type (str, optional): Additional type information of the module. Defaults to an empty string.
         reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         statusUrl (str): URL of the API endpoint that returns the status of the module
     """
 
     def __init__(
-        self, plant, id, name, hw_type, device, fw="", type="", reachable=False
+        self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False
     ):
         """HomePlusModule Constructor
 
@@ -30,6 +30,7 @@ class HomePlusModule:
             name (str): Name of the module
             hw_type (str): Hardware type(?) of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
+            bridge (str): Unique identifier of the bridge that controls this module
             fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
             type (str, optional): Additional type information of the module. Defaults to an empty string.
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
@@ -42,12 +43,13 @@ class HomePlusModule:
         self.reachable = reachable
         self.fw = fw
         self.type = type
+        self.bridge = bridge
 
         self.build_status_url("")
 
     def __str__(self):
         """ Return the string representing this module """
-        return f"Home+ Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}"
+        return f"Home+ Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, bridge->{self.bridge}"
 
     @property
     def logger(self):
@@ -72,7 +74,7 @@ class HomePlusModule:
             module_data (json): JSON data of the module state
         """
         self.reachable = module_data["reachable"] is True
-        self.fw = module_data["fw"]
+        self.fw = module_data["firmware_revision"]
 
     async def get_status_update(self):
         """Get the current status of the module by calling the corresponding API method

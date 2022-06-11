@@ -24,7 +24,7 @@ class HomePlusInteractiveModule(HomePlusModule):
     """ Data that is to be sent to the API to set the device to an 'on' state."""
 
     def __init__(
-        self, plant, id, name, hw_type, device, fw="", type="", reachable=False
+        self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False
     ):
         """HomePlusInteractiveModule Constructor
 
@@ -34,17 +34,18 @@ class HomePlusInteractiveModule(HomePlusModule):
             name (str): Name of the module
             hw_type (str): Hardware type(?) of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
+            bridge (str): Unique identifier of the bridge that controls this module
             fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
             type (str, optional): Additional type information of the module. Defaults to an empty string.
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """
-        super().__init__(plant, id, name, hw_type, device, fw, type, reachable)
+        super().__init__(plant, id, name, hw_type, device, bridge, fw, type, reachable)
         self.status = ""
         self.power = 0
 
     def __str__(self):
         """ Return the string representing this module """
-        return f"Home+ Interactive Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, status->{self.status}"
+        return f"Home+ Interactive Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, status->{self.status}, bridge->{self.bridge}"
 
     def update_state(self, module_data):
         """Update the internal state of the module from the input JSON data.
@@ -53,8 +54,8 @@ class HomePlusInteractiveModule(HomePlusModule):
             module_data (json): JSON data of the module state
         """
         super().update_state(module_data)
-        self.status = module_data["status"]
-        self.power = int(module_data["consumptions"][0]["value"])
+        self.status = "on" if module_data["on"] else "off"
+        self.power = int(module_data["power"])
 
     async def turn_on(self):
         """ Turn on this interactive module """
