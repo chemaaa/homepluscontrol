@@ -261,15 +261,13 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             Returns:
                 dict: code and state values in a dictionary
         """
-        code_pattern = "code=(.*)&"
-        match = re.search(code_pattern, redirect_url)
+        match = re.search(r'(?<=code=)([^&]*)(?=&)?', redirect_url)
         if match:
             code = {"code": match.group(1)}
         else:
             return None
 
-        state_pattern = "state=(.*)$"
-        match = re.search(state_pattern, redirect_url)
+        match = re.search(r'(?<=state=)([^&]*)(?=&)?', redirect_url)
         if match:
             state = self._decode_jwt(match.group(1))
 
