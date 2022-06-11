@@ -3,6 +3,7 @@ import logging
 
 import aiohttp
 
+from .homeplusconst import HOMES_DATA_URL, HOMES_STATUS_URL
 from .authentication import AbstractHomePlusOAuth2Async
 from .homepluslight import HomePlusLight
 from .homeplusmodule import HomePlusModule
@@ -10,28 +11,25 @@ from .homeplusplug import HomePlusPlug
 from .homeplusremote import HomePlusRemote
 from .homeplusautomation import HomePlusAutomation
 
-HOMES_DATA_URL = "https://api.netatmo.com/api/homesdata"
-HOMES_STATUS_URL = "https://api.netatmo.com/api/homestatus"
-""" API endpoint for the Home+ Home information. """
 
 PLANT_TOPOLOGY_RESOURCE = "/topology"
 """ Path to the Home+ home topology information. """
 
 PRODUCT_TYPES = {
-    "NLG" : "gateway",
-    "NLGS" : "gateway",
-    "NLP" : "plug",
-    "NLPM" : "plug",
-    "NLPBS" : "plug",
-    "NLF" : "light",
-    "NLFN" : "light",
-    "NLM" : "light",
-    "NLL" : "light",
-    "NLPT" : "light",
-    "NBR" : "automation",
-    "NBO" : "automation",
-    "NBS" : "automation",
-    "NLT" : "remote"
+    "NLG": "gateway",
+    "NLGS": "gateway",
+    "NLP": "plug",
+    "NLPM": "plug",
+    "NLPBS": "plug",
+    "NLF": "light",
+    "NLFN": "light",
+    "NLM": "light",
+    "NLL": "light",
+    "NLPT": "light",
+    "NBR": "automation",
+    "NBO": "automation",
+    "NBS": "automation",
+    "NLT": "remote",
 }
 
 MODULE_CLASSES = {
@@ -70,10 +68,10 @@ class HomePlusPlant:
         self.oauth_client = oauth_client
         self.modules = {}
         self.topology = json.loads('{"home": { } }')
-        self.module_status = json.loads('[ ]')
+        self.module_status = json.loads("[ ]")
 
     def __str__(self):
-        """ Return the string representing this home """
+        """Return the string representing this home"""
         return f"Home+ Home: name->{self.name}, id->{self.id}, country->{self.country}"
 
     @property
@@ -91,9 +89,7 @@ class HomePlusPlant:
         try:
             response = await self.oauth_client.get_request(HOMES_DATA_URL)
         except aiohttp.ClientResponseError:
-            self.logger.error(
-                "HTTP client response error when refreshing homes data"
-            )
+            self.logger.error("HTTP client response error when refreshing homes data")
         else:
             response_body = await response.json()
             self.topology = response_body["body"]
@@ -106,18 +102,12 @@ class HomePlusPlant:
         TODO: Handle consumptions
         """
         try:
-            response = await self.oauth_client.get_request(
-                HOMES_STATUS_URL,
-                {"home_id": self.id}
-            )
+            response = await self.oauth_client.get_request(HOMES_STATUS_URL, {"home_id": self.id})
         except aiohttp.ClientResponseError:
-            self.logger.error(
-                "HTTP client response error when refreshing module status"
-            )
+            self.logger.error("HTTP client response error when refreshing module status")
         else:
             response_body = await response.json()
             self.module_status = response_body["body"]["home"]["modules"]
-            print(self.module_status)
 
     async def update_topology(self):
         """Convenience method that first refreshes the home's topology information through an API call

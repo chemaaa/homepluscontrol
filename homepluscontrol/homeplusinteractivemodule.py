@@ -1,4 +1,5 @@
 import aiohttp
+import json
 
 from .homeplusmodule import HomePlusModule
 
@@ -14,18 +15,16 @@ class HomePlusInteractiveModule(HomePlusModule):
         power (int): The module power consumption in watts (as an integer value)
     """
 
-    MODULE_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/dummy"
+    SET_STATE_URL = "https://api.netatmo.com/api/setstate"
     """ Dummy endpoint for this module's status - has to be set by the inheriting classes."""
 
-    STATUS_ON = {"status": "on"}
+    STATUS_ON = True
     """ Data that is to be sent to the API to set the device to an 'on' state."""
 
-    STATUS_OFF = {"status": "off"}
+    STATUS_OFF = False
     """ Data that is to be sent to the API to set the device to an 'on' state."""
 
-    def __init__(
-        self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False
-    ):
+    def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
         """HomePlusInteractiveModule Constructor
 
         Args:
@@ -40,12 +39,21 @@ class HomePlusInteractiveModule(HomePlusModule):
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """
         super().__init__(plant, id, name, hw_type, device, bridge, fw, type, reachable)
-        self.status = ""
+        self.status = self.desired_status = ""
         self.power = 0
 
     def __str__(self):
-        """ Return the string representing this module """
+        """Return the string representing this module"""
         return f"Home+ Interactive Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, status->{self.status}, bridge->{self.bridge}"
+
+    def _build_state_data(self, desired_status):
+        """Return the JSON string that is to be sent in the POST request to update the module status"""
+        state_param = {
+            "home": {"id": self.plant.id, "modules": [{"id": self.id, "on": desired_status, "bridge": self.bridge}]}
+        }
+        print(json.dumps(state_param))
+        return state_param
+        # return json.dumps(state_param)
 
     def update_state(self, module_data):
         """Update the internal state of the module from the input JSON data.
@@ -54,16 +62,16 @@ class HomePlusInteractiveModule(HomePlusModule):
             module_data (json): JSON data of the module state
         """
         super().update_state(module_data)
-        self.status = "on" if module_data["on"] else "off"
-        self.power = int(module_data["power"])
+        self.status = "on" if module_data.get("on") else "off"
+        self.power = int(module_data.get("power", "0"))
 
     async def turn_on(self):
-        """ Turn on this interactive module """
+        """Turn on this interactive module"""
         if await self.post_status_update(HomePlusInteractiveModule.STATUS_ON):
             self.status = "on"
 
     async def turn_off(self):
-        """ Turn off this interactive module """
+        """Turn off this interactive module"""
         if await self.post_status_update(HomePlusInteractiveModule.STATUS_OFF):
             self.status = "off"
 
@@ -71,18 +79,19 @@ class HomePlusInteractiveModule(HomePlusModule):
         """Toggle the state of this interactive module, i.e. if the module is on, the method call turns it off.
         If the module is off, the method call turns it on.
         """
-        desired_end_status = "off"
+        desired_status = HomePlusInteractiveModule.STATUS_OFF
         if self.status == "off":
-            desired_end_status = "on"
-        if await self.post_status_update({"status": desired_end_status}):
-            self.status = desired_end_status
+            desired_status = HomePlusInteractiveModule.STATUS_ON
+
+        if await self.post_status_update(desired_status):
+            self.status = "on" if desired_status else "off"
 
     async def post_status_update(self, desired_end_status):
         """Call the API method to act on the module's status.
 
         Args:
-            desired_end_status (dict): One of the two class attributes (STATUS_ON and STATUS_OFF)
-                                       that are defined to set the status ON or OFF.
+            desired_end_status (boolean): One of the two class attributes (STATUS_ON and STATUS_OFF)
+                                          that are defined to set the status ON or OFF.
 
         Returns:
             bool: True if the API update request was successful; False otherwise.
@@ -91,12 +100,10 @@ class HomePlusInteractiveModule(HomePlusModule):
         update_status_result = False
         try:
             await oauth_client.post_request(
-                self.statusUrl, data=desired_end_status
+                HomePlusInteractiveModule.SET_STATE_URL, json=self._build_state_data(desired_end_status)
             )
         except aiohttp.ClientResponseError:
-            self.logger.error(
-                "HTTP client response error when posting module status"
-            )
+            self.logger.error("HTTP client response error when posting module status")
         else:
             update_status_result = True
         return update_status_result
