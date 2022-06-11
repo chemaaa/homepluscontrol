@@ -71,7 +71,7 @@ class AbstractHomePlusOAuth2Async(ABC):
 
         return await self.oauth_client.request(method, url, **kwargs)
 
-    async def get_request(self, url, **kwargs):
+    async def get_request(self, url, params=None, **kwargs):
         """Makes an authenticated async HTTP GET request.
 
         Shortcut method that relies on `request()` call and simply hardcodes
@@ -79,6 +79,8 @@ class AbstractHomePlusOAuth2Async(ABC):
 
         Args:
             url (str): Endpoint of the HTTP request
+            params (dict): Dictionary containing the parameters to be passed in
+                           the GET request URL
             **kwargs(dict): Keyword arguments that will be forwarded to the
                             aiohttp request handler
 
@@ -89,6 +91,8 @@ class AbstractHomePlusOAuth2Async(ABC):
             ClientError raised by aiohttp if it encounters an exceptional
             situation in the request
         """
+        if params is not None:
+            kwargs["params"] = params
         r = await self.request("get", url, **kwargs)
         r.raise_for_status()
         return r
