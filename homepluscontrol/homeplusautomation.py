@@ -24,9 +24,7 @@ class HomePlusAutomation(HomePlusModule):
     STOP_MOTION = -1
     """Level value to send to the API to make the automation stop."""
 
-    def __init__(
-        self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False
-    ):
+    def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
         """HomePlusAutomation Constructor
 
         Args:
@@ -42,10 +40,9 @@ class HomePlusAutomation(HomePlusModule):
         """
         super().__init__(plant, id, name, hw_type, device, bridge, fw, type, reachable)
         self.level = None
-        self.build_status_url(HomePlusAutomation.MODULE_BASE_URL)
 
     def __str__(self):
-        """ Return the string representing this module """
+        """Return the string representing this module"""
         return f"Home+ Automation Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, level->{self.level}, bridge->{self.bridge}"
 
     def update_state(self, module_data):
@@ -58,14 +55,14 @@ class HomePlusAutomation(HomePlusModule):
         self.level = module_data["level"]
 
     async def open(self):
-        """ Open the automation module.
+        """Open the automation module.
 
         This method will indicate the automation to go to the fully open position.
         """
         await self.set_level(HomePlusAutomation.OPEN_FULL)
 
     async def close(self):
-        """ Close the automation module.
+        """Close the automation module.
 
         This method will indicate the automation to go to the fully closed position.
         """
@@ -100,7 +97,7 @@ class HomePlusAutomation(HomePlusModule):
         oauth_client = self.plant.oauth_client
         update_status_result = False
 
-        desired_level_data = '{ "ids": ["string"], "level":' + str(desired_level) + '}'
+        desired_level_data = '{ "ids": ["string"], "level":' + str(desired_level) + "}"
         try:
             await oauth_client.post_request(
                 self.statusUrl,
@@ -108,9 +105,7 @@ class HomePlusAutomation(HomePlusModule):
                 headers={"Content-Type": "application/json"},
             )
         except aiohttp.ClientResponseError:
-            self.logger.error(
-                "HTTP client response error when posting module status"
-            )
+            self.logger.error("HTTP client response error when posting module status")
         else:
             update_status_result = True
         return update_status_result

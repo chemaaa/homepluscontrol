@@ -15,9 +15,7 @@ class HomePlusRemote(HomePlusModule):
     MODULE_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/remote/remote/addressLocation/plants/"
     """ API endpoint for the Home+ Remote status """
 
-    def __init__(
-        self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False
-    ):
+    def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
         """HomePlusRemote Constructor
 
         Args:
@@ -34,10 +32,9 @@ class HomePlusRemote(HomePlusModule):
         super().__init__(plant, id, name, hw_type, device, bridge, fw, type, reachable)
         self.battery = ""
         self.battery_level = ""
-        self.build_status_url(HomePlusRemote.MODULE_BASE_URL)
 
     def __str__(self):
-        """ Return the string representing this module """
+        """Return the string representing this module"""
         return f"Home+ Remote: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, battery->{self.battery}, battery_level->{self.battery_level}, bridge->{self.bridge}"
 
     def update_state(self, module_data):
@@ -47,5 +44,5 @@ class HomePlusRemote(HomePlusModule):
             module_data (json): JSON data of the module state
         """
         super().update_state(module_data)
-        self.battery = module_data["battery_state"]
-        self.battery_level = module_data["battery_level"]
+        self.battery = module_data.get("battery_state")
+        self.battery_level = module_data.get("battery_level")

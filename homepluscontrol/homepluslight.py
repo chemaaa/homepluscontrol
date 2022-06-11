@@ -10,9 +10,7 @@ class HomePlusLight(HomePlusInteractiveModule):
     MODULE_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/light/lighting/addressLocation/plants/"
     """ API endpoint for the Home+ Light status """
 
-    def __init__(
-        self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False
-    ):
+    def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
         """HomePlusLight Constructor
 
         Args:
@@ -28,8 +26,7 @@ class HomePlusLight(HomePlusInteractiveModule):
         """
         super().__init__(plant, id, name, hw_type, device, bridge, fw, type, reachable)
         self.status = ""
-        self.build_status_url(HomePlusLight.MODULE_BASE_URL)
 
     def __str__(self):
-        """ Return the string representing this module """
+        """Return the string representing this module"""
         return f"Home+ Light: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, status->{self.status}, bridge->{self.bridge}"
