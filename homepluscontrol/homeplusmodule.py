@@ -3,6 +3,8 @@ import logging
 
 import aiohttp
 
+from .homeplusconst import HOMES_STATUS_URL
+
 
 class HomePlusModule:
     """Base Class representing a "module", i.e a Home+ device such as a plug, a light or a remote.
@@ -19,9 +21,7 @@ class HomePlusModule:
         statusUrl (str): URL of the API endpoint that returns the status of the module
     """
 
-    def __init__(
-        self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False
-    ):
+    def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
         """HomePlusModule Constructor
 
         Args:
@@ -44,28 +44,16 @@ class HomePlusModule:
         self.fw = fw
         self.type = type
         self.bridge = bridge
-
-        self.build_status_url("")
+        self.statusUrl = HOMES_STATUS_URL
 
     def __str__(self):
-        """ Return the string representing this module """
+        """Return the string representing this module"""
         return f"Home+ Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, bridge->{self.bridge}"
 
     @property
     def logger(self):
-        """ Return logger of the Home+ Control Module """
+        """Return logger of the Home+ Control Module"""
         return logging.getLogger(__name__)
-
-    def build_status_url(self, base_url):
-        """Build the full API URL that provides the status of the module. The URL is updated into the `statusUrl` attribute
-
-        Args:
-            base_url (str): Leftmost part of the URL to which Plant and Module Identifiers are concatenated
-
-        """
-        self.statusUrl = (
-            base_url + self.plant.id + "/modules/parameter/id/value/" + self.id
-        )
 
     def update_state(self, module_data):
         """Update the internal state of the module from the input JSON data.
@@ -73,8 +61,8 @@ class HomePlusModule:
         Args:
             module_data (json): JSON data of the module state
         """
-        self.reachable = module_data["reachable"] is True
-        self.fw = module_data["firmware_revision"]
+        self.reachable = module_data.get("reachable") is True
+        self.fw = module_data.get("firmware_revision")
 
     async def get_status_update(self):
         """Get the current status of the module by calling the corresponding API method
@@ -84,16 +72,16 @@ class HomePlusModule:
             dict: JSON representation of the module's status.
         """
         oauth_client = self.plant.oauth_client
-        status_result = json.loads('{"modules": { } }')
         try:
-            response = await oauth_client.get_request(self.statusUrl)
+            response = await oauth_client.get_request(self.statusUrl, {"home_id": self.plant.id})
         except aiohttp.ClientResponseError:
-            self.logger.error(
-                "HTTP client response error when update module status"
-            )
+            self.logger.error("HTTP client response error when update module status")
         else:
-            status_result = await response.json()
-            module_key = list(status_result)[0]
-            module_data = status_result[module_key][0]
+            response_body = await response.json()
+            all_module_status = response_body["body"]["home"]["modules"]
+            module_data = {}
+            for module in all_module_status:
+                if module["id"] == self.id:
+                    module_data = module
             self.update_state(module_data)
         return module_data
