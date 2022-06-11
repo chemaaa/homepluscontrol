@@ -11,10 +11,7 @@ from yarl import URL
 
 
 class AbstractHomePlusOAuth2Async(ABC):
-    def __init__(
-        self,
-        oauth_client=None
-    ):
+    def __init__(self, oauth_client=None):
         """AbstractHomePlusOAuth2Async Constructor.
 
         Base class to handle the OAuth2 authentication flow and HTTP
@@ -97,7 +94,7 @@ class AbstractHomePlusOAuth2Async(ABC):
         r.raise_for_status()
         return r
 
-    async def post_request(self, url, data, **kwargs):
+    async def post_request(self, url, data=None, json=None, **kwargs):
         """Makes an authenticated async HTTP POST request.
 
         Shortcut method that relies on `request()` call and simply hardcodes
@@ -107,6 +104,9 @@ class AbstractHomePlusOAuth2Async(ABC):
             url (str): Endpoint of the HTTP request
             data (dict): Dictionary containing the parameters to be passed in
                          the POST request body
+            json (dict): Dictionary containing the json data to be passed in
+                         the POST request body. If "data" is defined, this "json"
+                         input parameter will be ignored
             **kwargs (dict): Keyword arguments that will be forwarded to the
                              aiohttp request handler
 
@@ -117,7 +117,10 @@ class AbstractHomePlusOAuth2Async(ABC):
             ClientError raised by aiohttp if it encounters an exceptional
             situation in the request
         """
-        kwargs["data"] = data
+        if data is not None:
+            kwargs["data"] = data
+        elif json is not None:
+            kwargs["json"] = json
         r = await self.request("post", url, **kwargs)
         r.raise_for_status()
         return r
@@ -166,7 +169,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             client_id (str): Client identifier assigned by the API provider
                              when registering an app
             client_secret (str): Client secret assigned by the API provider
-                                 when registering an app            
+                                 when registering an app
             token (dict, optional): oauth2 token used by this authentication
                                     instance. Defaults to None.
             redirect_uri (str, optional): URL for the redirection from the
@@ -261,13 +264,13 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             Returns:
                 dict: code and state values in a dictionary
         """
-        match = re.search(r'(?<=code=)([^&]*)(?=&)?', redirect_url)
+        match = re.search(r"(?<=code=)([^&]*)(?=&)?", redirect_url)
         if match:
             code = {"code": match.group(1)}
         else:
             return None
 
-        match = re.search(r'(?<=state=)([^&]*)(?=&)?', redirect_url)
+        match = re.search(r"(?<=state=)([^&]*)(?=&)?", redirect_url)
         if match:
             state = self._decode_jwt(match.group(1))
 
@@ -311,9 +314,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
 
-        resp = await self.oauth_client.post(
-            HomePlusOAuth2Async.TOKEN_URL, data=data
-        )
+        resp = await self.oauth_client.post(HomePlusOAuth2Async.TOKEN_URL, data=data)
         resp.raise_for_status()
 
         self.token = cast(dict, await resp.json())
