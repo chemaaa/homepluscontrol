@@ -13,8 +13,7 @@ from yarl import URL
 class AbstractHomePlusOAuth2Async(ABC):
     def __init__(
         self,
-        subscription_key,
-        oauth_client=None,
+        oauth_client=None
     ):
         """AbstractHomePlusOAuth2Async Constructor.
 
@@ -27,17 +26,10 @@ class AbstractHomePlusOAuth2Async(ABC):
         Based on aiohttp for asynchronous requests.
 
         Args:
-            subscription_key (str): Subscription key obtained from
-                                    the API provider
             oauth_client (:obj:`ClientSession`): aiohttp ClientSession object
                                                  that handles HTTP async
                                                  requests
         """
-        self.subscription_key = subscription_key
-        self._subscription_header = {
-            "Ocp-Apim-Subscription-Key": self.subscription_key
-        }
-
         if oauth_client is None:
             self.oauth_client = ClientSession()
         else:
@@ -50,9 +42,7 @@ class AbstractHomePlusOAuth2Async(ABC):
     async def request(self, method, url, **kwargs):
         """Makes an authenticated async HTTP request.
 
-        This method wraps around the aiohttp request method and adds the
-        mandatory subscription key header that is required by the Home +
-        Control API calls.
+        This method wraps around the aiohttp request method
 
         Args:
             method (str): HTTP method to be used in the request (get, post,
@@ -68,22 +58,17 @@ class AbstractHomePlusOAuth2Async(ABC):
             ClientError raised by aiohttp if it encounters an exceptional
             situation in the request
         """
-        # Add the mandatory subscription key header to the request
+        access_token = await self.async_get_access_token()
         if "headers" in kwargs:
             kwargs["headers"] = {
                 **kwargs["headers"],
-                **self._subscription_header,
+                "Authorization": f"Bearer {access_token['access_token']}",
             }
         else:
-            kwargs["headers"] = self._subscription_header
+            kwargs["headers"] = {
+                "Authorization": f"Bearer {access_token['access_token']}",
+            }
 
-        await self.async_get_access_token()
-
-        access_token = await self.async_get_access_token()
-        kwargs["headers"] = {
-            **kwargs["headers"],
-            "authorization": f"Bearer {access_token}",
-        }
         return await self.oauth_client.request(method, url, **kwargs)
 
     async def get_request(self, url, **kwargs):
@@ -148,8 +133,6 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
                          when registering an app
         client_secret (str): Client secret assigned by the API provider
                              when registering an app
-        subscription_key (str): Subscription key obtained from
-                                the API provider
         token (dict): oauth2 token used by this authentication instance
         redirect_uri (str): URL for the redirection from
                             the authentication provider
@@ -159,15 +142,15 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
                                              handles HTTP async requests
     """
 
-    # Authentication URLs for Legrant Home+ Control API
-    AUTH_BASE_URL = "https://partners-login.eliotbylegrand.com/authorize"
-    TOKEN_URL = REFRESH_URL = "https://partners-login.eliotbylegrand.com/token"
+    # Authentication URLs for Netatmo Connect Home+ Control API
+    AUTH_BASE_URL = "https://api.netatmo.com/oauth2/authorize"
+    TOKEN_URL = REFRESH_URL = "https://api.netatmo.com/oauth2/token"
+    SCOPES = "read_magellan write_magellan read_bubendorff write_bubendorff"
 
     def __init__(
         self,
         client_id,
         client_secret,
-        subscription_key,
         token=None,
         redirect_uri=None,
         token_updater=None,
@@ -179,9 +162,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             client_id (str): Client identifier assigned by the API provider
                              when registering an app
             client_secret (str): Client secret assigned by the API provider
-                                 when registering an app
-            subscription_key (str): Subscription key obtained from
-                                    the API provider
+                                 when registering an app            
             token (dict, optional): oauth2 token used by this authentication
                                     instance. Defaults to None.
             redirect_uri (str, optional): URL for the redirection from the
@@ -197,11 +178,11 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
                                           created. Defaults to None.
         """
         super().__init__(
-            subscription_key=subscription_key,
             oauth_client=oauth_client,
         )
         self.client_id = client_id
         self.client_secret = client_secret
+        self.scope = HomePlusOAuth2Async.SCOPES
         if token is None:
             token = {
                 "expires_on": 0,
@@ -336,6 +317,9 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
         self.token = cast(dict, await resp.json())
         if self.token_updater is not None:
             await self.token_updater(self.token)
+
+        current_time = time.time()
+        self.token["expires_on"] = current_time + self.token["expires_in"]
         return self.token
 
     def generate_authorize_url(self) -> str:
@@ -352,6 +336,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
                     "client_id": self.client_id,
                     "redirect_uri": self.redirect_uri,
                     "state": self._encode_jwt({"state": self._state}),
+                    "scope": self.scope,
                 }
             )
         )
@@ -407,5 +392,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
                 {
                     "grant_type": "authorization_code",
                     "code": req_body["code"],
+                    "redirect_uri": self.redirect_uri,
+                    "scope": self.scope,
                 }
             )
