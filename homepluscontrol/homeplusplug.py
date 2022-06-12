@@ -7,9 +7,6 @@ class HomePlusPlug(HomePlusInteractiveModule):
     This class extends the HomePlusInteractiveModule base class.
     """
 
-    MODULE_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/plug/energy/addressLocation/plants/"
-    """ API endpoint for the Home+ Plug status """
-
     def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
         """HomePlusPlug Constructor
 
@@ -20,7 +17,7 @@ class HomePlusPlug(HomePlusInteractiveModule):
             hw_type (str): Hardware/product of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
             bridge (str): Unique identifier of the bridge that controls this module
-            fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
+            fw (str, optional): Firmware revision of the module. Defaults to an empty string.
             type (str, optional): Additional type information of the module. Defaults to an empty string.
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """

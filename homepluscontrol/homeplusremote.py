@@ -8,12 +8,9 @@ class HomePlusRemote(HomePlusModule):
     This class extends the HomePlusModule base class. The remote is not an interactive module.
 
     Attributes:
-        battery: state of charge of the module's battery (high/low).
+        battery: state of charge of the module's battery (full/high/medium/low/very_low).
         battery_level: state of charge of the module's battery
     """
-
-    MODULE_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/remote/remote/addressLocation/plants/"
-    """ API endpoint for the Home+ Remote status """
 
     def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
         """HomePlusRemote Constructor
@@ -25,7 +22,7 @@ class HomePlusRemote(HomePlusModule):
             hw_type (str): Hardware/product of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
             bridge (str): Unique identifier of the bridge that controls this module
-            fw (str, optional): Firware(?) of the module. Defaults to an empty string.
+            fw (str, optional): Firmware revision of the module. Defaults to an empty string.
             type (str, optional): Additional type information of the module. Defaults to an empty string.
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """

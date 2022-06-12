@@ -183,6 +183,7 @@ class HomePlusPlant:
             device=module_product_type,
             name=input_module["name"],
             hw_type=input_module["type"],
+            type=input_module.get("appliance_type"),
             bridge=input_module.get("bridge"),
         )
 

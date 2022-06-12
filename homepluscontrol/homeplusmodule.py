@@ -12,9 +12,9 @@ class HomePlusModule:
         plant (HomePlusPlant): Plant that holds this module
         id (str): Unique identifier of the module
         name (str): Name of the module
-        hw_type (str): Hardware type(?) of the module (NLP, NLT, NLF)
+        hw_type (str): Hardware/product type of the module (NLP, NLT, NLF)
         device (str): Type of the device (plug, light, remote)
-        fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
+        fw (str, optional): Firmware revision of the module. Defaults to an empty string.
         type (str, optional): Additional type information of the module. Defaults to an empty string.
         reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         statusUrl (str): URL of the API endpoint that returns the status of the home modules
@@ -30,7 +30,7 @@ class HomePlusModule:
             hw_type (str): Hardware/product type of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
             bridge (str): Unique identifier of the bridge that controls this module
-            fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
+            fw (str, optional): Firmware revision of the module. Defaults to an empty string.
             type (str, optional): Additional type information of the module. Defaults to an empty string.
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """
