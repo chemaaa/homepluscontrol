@@ -3,41 +3,13 @@ import logging
 
 import aiohttp
 
-from .homeplusconst import HOMES_DATA_URL, HOMES_STATUS_URL
+from .homeplusconst import HOMES_DATA_URL, HOMES_STATUS_URL, PRODUCT_TYPES, MODULE_CLASSES
 from .authentication import AbstractHomePlusOAuth2Async
 from .homepluslight import HomePlusLight
 from .homeplusmodule import HomePlusModule
 from .homeplusplug import HomePlusPlug
 from .homeplusremote import HomePlusRemote
 from .homeplusautomation import HomePlusAutomation
-
-
-PLANT_TOPOLOGY_RESOURCE = "/topology"
-""" Path to the Home+ home topology information. """
-
-PRODUCT_TYPES = {
-    "NLG": "gateway",
-    "NLGS": "gateway",
-    "NLP": "plug",
-    "NLPM": "plug",
-    "NLPBS": "plug",
-    "NLF": "light",
-    "NLFN": "light",
-    "NLM": "light",
-    "NLL": "light",
-    "NLPT": "light",
-    "NBR": "automation",
-    "NBO": "automation",
-    "NBS": "automation",
-    "NLT": "remote",
-}
-
-MODULE_CLASSES = {
-    "light": HomePlusLight,
-    "plug": HomePlusPlug,
-    "remote": HomePlusRemote,
-    "automation": HomePlusAutomation,
-}
 
 
 class HomePlusPlant:
