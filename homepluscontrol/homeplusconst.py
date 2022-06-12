@@ -2,6 +2,9 @@
 HOMES_DATA_URL = "https://api.netatmo.com/api/homesdata"
 HOMES_STATUS_URL = "https://api.netatmo.com/api/homestatus"
 
+""" API endpoint to set the stat of the module. """
+SET_STATE_URL = "https://api.netatmo.com/api/setstate"
+
 """ Legrand/Netatmo product types """
 PRODUCT_TYPES = {
     "NLG": "gateway",

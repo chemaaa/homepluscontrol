@@ -1,5 +1,6 @@
 import aiohttp
 
+from .homeplusconst import SET_STATE_URL
 from .homeplusmodule import HomePlusModule
 
 
@@ -11,9 +12,6 @@ class HomePlusAutomation(HomePlusModule):
     Attributes:
         level (int): The automation's position level (as an integer value from 0 to 100).
     """
-
-    MODULE_BASE_URL = "https://api.developer.legrand.com/hc/api/v1.0/automation/automation/addressLocation/plants/"
-    """API endpoint for the Home+ Automation status """
 
     OPEN_FULL = 100
     """Level value that represents a fully open cover."""
@@ -31,10 +29,10 @@ class HomePlusAutomation(HomePlusModule):
             plant (HomePlusPlant): Plant that holds this module
             id (str): Unique identifier of the module
             name (str): Name of the module
-            hw_type (str): Hardware type(?) of the module (NLP, NLT, NLF)
+            hw_type (str): Hardware/product type of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
             bridge (str): Unique identifier of the bridge that controls this module
-            fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
+            fw (str, optional): Firmware revision of the module. Defaults to an empty string.
             type (str, optional): Additional type information of the module. Defaults to an empty string.
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """
@@ -45,6 +43,16 @@ class HomePlusAutomation(HomePlusModule):
         """Return the string representing this module"""
         return f"Home+ Automation Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, level->{self.level}, bridge->{self.bridge}"
 
+    def _build_state_data(self, desired_level):
+        """Return the JSON structure that is to be sent in the POST request to update the module status"""
+        state_param = {
+            "home": {
+                "id": self.plant.id,
+                "modules": [{"id": self.id, "target_position": desired_level, "bridge": self.bridge}],
+            }
+        }
+        return state_param
+
     def update_state(self, module_data):
         """Update the internal state of the module from the input JSON data.
 
@@ -52,7 +60,7 @@ class HomePlusAutomation(HomePlusModule):
             module_data (json): JSON data of the module state
         """
         super().update_state(module_data)
-        self.level = module_data["level"]
+        self.level = module_data["current_position"]
 
     async def open(self):
         """Open the automation module.
@@ -97,13 +105,8 @@ class HomePlusAutomation(HomePlusModule):
         oauth_client = self.plant.oauth_client
         update_status_result = False
 
-        desired_level_data = '{ "ids": ["string"], "level":' + str(desired_level) + "}"
         try:
-            await oauth_client.post_request(
-                self.statusUrl,
-                data=desired_level_data,
-                headers={"Content-Type": "application/json"},
-            )
+            await oauth_client.post_request(SET_STATE_URL, json=self._build_state_data(desired_level))
         except aiohttp.ClientResponseError:
             self.logger.error("HTTP client response error when posting module status")
         else:

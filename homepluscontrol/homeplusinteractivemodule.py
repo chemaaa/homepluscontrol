@@ -1,6 +1,7 @@
 import aiohttp
 import json
 
+from .homeplusconst import SET_STATE_URL
 from .homeplusmodule import HomePlusModule
 
 
@@ -34,7 +35,7 @@ class HomePlusInteractiveModule(HomePlusModule):
             hw_type (str): Hardware/product of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
             bridge (str): Unique identifier of the bridge that controls this module
-            fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
+            fw (str, optional): Firmware revision of the module. Defaults to an empty string.
             type (str, optional): Additional type information of the module. Defaults to an empty string.
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """
@@ -97,9 +98,7 @@ class HomePlusInteractiveModule(HomePlusModule):
         oauth_client = self.plant.oauth_client
         update_status_result = False
         try:
-            await oauth_client.post_request(
-                HomePlusInteractiveModule.SET_STATE_URL, json=self._build_state_data(desired_end_status)
-            )
+            await oauth_client.post_request(SET_STATE_URL, json=self._build_state_data(desired_end_status))
         except aiohttp.ClientResponseError:
             self.logger.error("HTTP client response error when posting module status")
         else:
