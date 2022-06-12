@@ -16,13 +16,13 @@ class HomePlusInteractiveModule(HomePlusModule):
     """
 
     SET_STATE_URL = "https://api.netatmo.com/api/setstate"
-    """ Dummy endpoint for this module's status - has to be set by the inheriting classes."""
+    """ API endpoint to set the stat of the module. """
 
     STATUS_ON = True
-    """ Data that is to be sent to the API to set the device to an 'on' state."""
+    """ Data to be set in the API to set the device to an 'on' state."""
 
     STATUS_OFF = False
-    """ Data that is to be sent to the API to set the device to an 'on' state."""
+    """ Data to be set in the API to set the device to an 'off' state."""
 
     def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
         """HomePlusInteractiveModule Constructor
@@ -31,7 +31,7 @@ class HomePlusInteractiveModule(HomePlusModule):
             plant (HomePlusPlant): Plant that holds this module
             id (str): Unique identifier of the module
             name (str): Name of the module
-            hw_type (str): Hardware type(?) of the module (NLP, NLT, NLF)
+            hw_type (str): Hardware/product of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
             bridge (str): Unique identifier of the bridge that controls this module
             fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
@@ -39,7 +39,7 @@ class HomePlusInteractiveModule(HomePlusModule):
             reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
         """
         super().__init__(plant, id, name, hw_type, device, bridge, fw, type, reachable)
-        self.status = self.desired_status = ""
+        self.status = ""
         self.power = 0
 
     def __str__(self):
@@ -47,13 +47,11 @@ class HomePlusInteractiveModule(HomePlusModule):
         return f"Home+ Interactive Module: device->{self.device}, name->{self.name}, id->{self.id}, reachable->{self.reachable}, status->{self.status}, bridge->{self.bridge}"
 
     def _build_state_data(self, desired_status):
-        """Return the JSON string that is to be sent in the POST request to update the module status"""
+        """Return the JSON structure that is to be sent in the POST request to update the module status"""
         state_param = {
             "home": {"id": self.plant.id, "modules": [{"id": self.id, "on": desired_status, "bridge": self.bridge}]}
         }
-        print(json.dumps(state_param))
         return state_param
-        # return json.dumps(state_param)
 
     def update_state(self, module_data):
         """Update the internal state of the module from the input JSON data.

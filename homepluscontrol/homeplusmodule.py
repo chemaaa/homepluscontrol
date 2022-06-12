@@ -1,4 +1,3 @@
-import json
 import logging
 
 import aiohttp
@@ -18,7 +17,7 @@ class HomePlusModule:
         fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
         type (str, optional): Additional type information of the module. Defaults to an empty string.
         reachable (bool, optional): True if the module is reachable and False if it is not. Defaults to False.
-        statusUrl (str): URL of the API endpoint that returns the status of the module
+        statusUrl (str): URL of the API endpoint that returns the status of the home modules
     """
 
     def __init__(self, plant, id, name, hw_type, device, bridge, fw="", type="", reachable=False):
@@ -28,7 +27,7 @@ class HomePlusModule:
             plant (HomePlusPlant): Plant that holds this module
             id (str): Unique identifier of the module
             name (str): Name of the module
-            hw_type (str): Hardware type(?) of the module (NLP, NLT, NLF)
+            hw_type (str): Hardware/product type of the module (NLP, NLT, NLF)
             device (str): Type of the device (plug, light, remote)
             bridge (str): Unique identifier of the bridge that controls this module
             fw (str, optional): Firmware(?) of the module. Defaults to an empty string.
@@ -65,8 +64,7 @@ class HomePlusModule:
         self.fw = module_data.get("firmware_revision")
 
     async def get_status_update(self):
-        """Get the current status of the module by calling the corresponding API method
-        located at the URL in the `statusUrl` attributes.
+        """Get the current status of the module by calling the corresponding API method.
 
         Returns:
             dict: JSON representation of the module's status.
