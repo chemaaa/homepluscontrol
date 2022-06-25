@@ -22,10 +22,3 @@ PRODUCT_TYPES = {
     "NBS": "automation",
     "NLT": "remote",
 }
-
-MODULE_CLASSES = {
-    "light": HomePlusLight,
-    "plug": HomePlusPlug,
-    "remote": HomePlusRemote,
-    "automation": HomePlusAutomation,
-}

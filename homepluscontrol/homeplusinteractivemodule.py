@@ -16,9 +16,6 @@ class HomePlusInteractiveModule(HomePlusModule):
         power (int): The module power consumption in watts (as an integer value)
     """
 
-    SET_STATE_URL = "https://api.netatmo.com/api/setstate"
-    """ API endpoint to set the stat of the module. """
-
     STATUS_ON = True
     """ Data to be set in the API to set the device to an 'on' state."""
 
