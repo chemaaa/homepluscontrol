@@ -6,15 +6,10 @@ from homepluscontrol import (
 
 
 # Plug Module Tests
-def test_plug_module_url(test_plug):
-    assert (
-        test_plug.statusUrl
-        == "https://api.developer.legrand.com/hc/api/v1.0/plug/energy/addressLocation/plants/mock_plant_1/modules/parameter/id/value/module_id_2"
-    )
-
-
 def test_plug_module_str(test_plug):
-    module_str = "Home+ Plug: device->Plug, name->Plug Module 1, id->module_id_2, reachable->False, status->"
+    module_str = (
+        "Home+ Plug: device->Plug, name->Plug Module 1, id->module_id_2, reachable->False, status->, bridge->00:11:22:33:44:55"
+    )
     assert test_plug.__str__() == module_str
 
 

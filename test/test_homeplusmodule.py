@@ -4,16 +4,10 @@ from homepluscontrol import (
 
 
 # Base Module Tests
-def test_base_module_url(test_module):
-    test_module.build_status_url("https://dummy.com:1123/")
-    assert (
-        test_module.statusUrl
-        == "https://dummy.com:1123/mock_plant_1/modules/parameter/id/value/module_id"
-    )
-
-
 def test_base_module_str(test_module):
-    module_str = "Home+ Module: device->Base Module, name->Test Module 1, id->module_id, reachable->False"
+    module_str = (
+        "Home+ Module: device->Base Module, name->Test Module 1, id->module_id, reachable->False, bridge->00:11:22:33:44:55"
+    )
     assert test_module.__str__() == module_str
 
 

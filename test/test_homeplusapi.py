@@ -20,9 +20,8 @@ TEST_UPDATE_INTERVALS = {
 
 # Implement a dummy class for testing
 class MockHomePlusControlAPI(homeplusapi.HomePlusControlAPI):
-
-    def __init__(self, subscription_key, oauth_client, update_intervals):
-        super().__init__(subscription_key, oauth_client, update_intervals)
+    def __init__(self, oauth_client, update_intervals):
+        super().__init__(oauth_client, update_intervals)
 
     async def async_get_access_token(self):
         pass
@@ -30,7 +29,7 @@ class MockHomePlusControlAPI(homeplusapi.HomePlusControlAPI):
 
 def test_handle_plant_data(mock_plant_aioresponse, test_client):
     loop = asyncio.get_event_loop()
-    test_api = MockHomePlusControlAPI("subscription_key", test_client, TEST_UPDATE_INTERVALS)
+    test_api = MockHomePlusControlAPI(test_client, TEST_UPDATE_INTERVALS)
     loop.run_until_complete(test_api.async_handle_plant_data())
 
     # Run once - one plant
@@ -45,7 +44,7 @@ def test_handle_plant_data(mock_plant_aioresponse, test_client):
 
 def test_handle_module_status(mock_aioresponse, test_client):
     loop = asyncio.get_event_loop()
-    test_api = MockHomePlusControlAPI("subscription_key", test_client, TEST_UPDATE_INTERVALS)
+    test_api = MockHomePlusControlAPI(test_client, TEST_UPDATE_INTERVALS)
 
     loop.run_until_complete(test_api.async_handle_plant_data())
     assert len(test_api._plants) == 1

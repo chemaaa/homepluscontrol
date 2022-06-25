@@ -5,7 +5,6 @@ from homepluscontrol import authentication
 
 client_id = "client_identifier"
 client_secret = "client_secret"
-subscription_key = "subscription_key"
 redirect_uri = "https://www.dummy.com:1123/auth"
 
 
@@ -21,7 +20,6 @@ def test_token_validity():
         client = authentication.HomePlusOAuth2Async(
             client_id=client_id,
             client_secret=client_secret,
-            subscription_key=subscription_key,
             redirect_uri=redirect_uri,
             token=token,
         )
@@ -48,11 +46,10 @@ def test_generation_auth_url():
         client = authentication.HomePlusOAuth2Async(
             client_id=client_id,
             client_secret=client_secret,
-            subscription_key=subscription_key,
             redirect_uri=redirect_uri,
             token=token,
         )
-        expected_url = "https://partners-login.eliotbylegrand.com/authorize?response_type=code&client_id=client_identifier&redirect_uri=https://www.dummy.com:1123/auth&state="
+        expected_url = "https://api.netatmo.com/oauth2/authorize?response_type=code&client_id=client_identifier&redirect_uri=https://www.dummy.com:1123/auth&state="
         assert client.generate_authorize_url().startswith(expected_url)
 
     loop = asyncio.get_event_loop()
@@ -71,7 +68,6 @@ def test_split_redirect_url():
         client = authentication.HomePlusOAuth2Async(
             client_id=client_id,
             client_secret=client_secret,
-            subscription_key=subscription_key,
             redirect_uri=redirect_uri,
             token=token,
         )
@@ -98,7 +94,6 @@ def test_decode_state():
         client = authentication.HomePlusOAuth2Async(
             client_id=client_id,
             client_secret=client_secret,
-            subscription_key=subscription_key,
             redirect_uri=redirect_uri,
             token=token,
         )
