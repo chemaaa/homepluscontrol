@@ -4,7 +4,7 @@ import logging
 import time
 
 from .authentication import AbstractHomePlusOAuth2Async
-from .homeplusconst import HOMES_DATA_URL, HOMES_STATUS_URL
+from .homeplusconst import HOMES_DATA_URL
 from .homeplusplant import HomePlusPlant
 
 # The Netatmo Connect Home+ Control API has increased number of request quotas when compared to

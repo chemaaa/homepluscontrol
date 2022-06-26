@@ -175,7 +175,7 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             redirect_uri (str, optional): URL for the redirection from the
                                           authentication provider.
                                           Defaults to None
-            token_update (function): function that is called when a new
+            token_updater (function): function that is called when a new
                                      token is obtained from the
                                      authentication provider.
                                      Defaults to None

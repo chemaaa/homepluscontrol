@@ -28,7 +28,7 @@ class HomePlusPlant:
         country (str): Two-letter country code where the home is located.
         oauth_client (AbstractHomePlusOAuth2Async): Authentication client to make requests to the REST API.
         modules (dict): Dictionary containing the information of all modules in the home.
-        topology (dict): JSON representation of the home's topology as returned by the API
+        home_data (dict): JSON representation of the home's data as returned by the API
         module_status (dict): JSON representation of the home modules' status as returned by the API
     """
 
@@ -37,7 +37,7 @@ class HomePlusPlant:
 
         Args:
             id (str): Unique identifier of the home.
-            name (str): Name of the home.
+            home_data (dict): JSON representation of the home's data as returned by the API.
             country (str): Two-letter country code where the home is located.
             oauth_client (AbstractHomePlusOAuth2Async): Authentication client to make request to the REST API.
         """
@@ -59,7 +59,7 @@ class HomePlusPlant:
         return logging.getLogger(__name__)
 
     async def update_home_data(self, input_home_data=None):
-        """Convenience method that first refreshes the home's topology information through an API call
+        """Method that optionally refreshes the home's topology information through an API call
         and then parses the modules contained in that topology into the object's inner map.
 
         This method call on its own will not refresh the status of the modules.
@@ -77,12 +77,16 @@ class HomePlusPlant:
         self._parse_home_data(new_home_data)
 
     async def update_module_status(self, input_module_status=None):
-        """Convenience method that first refreshes the information of the modules' status through an API call
+        """Method that optionally refreshes the information of the modules' status through an API call
         and then parses the status information into the modules of the object's inner map.
 
         This method call on its own will not refresh the module topology of the home so modules that are no longer
         present in the home will remain with their last known status, while new modules that may have been added
         to the topology will not be reflected in it just yet.
+
+        Args:
+            input_module_status (dict): Dictionary representing the JSON structure of the home's module status as returned
+                                        by the API. If absent, an API call will be made to obtain this data.
         """
         if input_module_status is None:
             new_module_status = await self._refresh_module_status()
@@ -92,20 +96,22 @@ class HomePlusPlant:
         self._parse_module_status(new_module_status)
 
     async def update_home_data_and_modules(self, input_home_data=None, input_module_status=None):
-        """Convenience method that first refreshes the home's topology information and then refreshes
-        the status of all modules in that topology.
+        """Convenience method that calls the `update_home_data` and `update_modules_status` methods in sequence so as
+        to update the home's topology information and then refresh the status of all modules in that topology.
 
         This implies at least 1 API call and will produce an up-to-date view of the home in the inner map of modules.
 
         Args:
             input_home_data (dict): Dictionary representing the JSON structure of the home as returned by the API.
                                     If absent, an API call will be made to obtain this data.
+            input_module_status (dict): Dictionary representing the JSON structure of the home's module status as returned
+                                        by the API. If absent, an API call will be made to obtain this data.
         """
         await self.update_home_data(input_home_data)
         await self.update_module_status(input_module_status)
 
     def _set_home_data(self, input_home_data):
-        """Update the home information from the input home data JSON object
+        """Update the home information from the input home data JSON object.
 
         Args:
             input_home_data (dict): Dictionary representing the JSON structure of the home as returned by the API.
@@ -115,17 +121,19 @@ class HomePlusPlant:
         self.home_data = input_home_data
 
     async def _refresh_home_data(self):
-        """Makes a call to the API to refresh the information of the home into attribute `topology`.
-        The topology provides information about the homes ambients/rooms and the modules within them.
+        """Makes a call to the API to refresh the information of the home into attribute `home_data`.
 
         At this time, the home topology is only used to extract the module data.
-        TODO: Handle ambients/rooms
+        TODO: Handle rooms/schedules
+
+        Returns:
+            dict: Dictionary representing the JSON structure of the home as returned by the API.
         """
         new_home_data = self.home_data
         try:
             response = await self.oauth_client.get_request(HOMES_DATA_URL)
         except aiohttp.ClientResponseError:
-            self.logger.error("HTTP client response error when refreshing homes data")
+            self.logger.error("HTTP client response error when refreshing home's data")
         else:
             response_body = await response.json()
             for home_data in response_body["body"]["homes"]:
@@ -136,10 +144,13 @@ class HomePlusPlant:
 
     async def _refresh_module_status(self):
         """Makes a call to the API to refresh the status of all modules in the home into attribute `module_status`.
-        The module status provides information about the modules current status, eg. reachability,
-        on/off, battery, consumption.
+        The module status provides information about the modules current status, eg. reachability, on/off,
+        battery, consumption.
 
         TODO: Handle consumptions
+
+        Returns:
+            dict: Dictionary representing the JSON structure of the home's module status as returned by the API.
         """
         new_module_status = self.module_status
         try:
@@ -179,9 +190,12 @@ class HomePlusPlant:
     def _parse_module_status(self, input_module_status):
         """Auxiliary method to parse the module status data returned by the API.
 
-        It is assumed that this data has been previously refreshed into the object's attribute: self.module_status.
-        It is also assumed that the home topology is up to date - this method will only search for the module status
+        It is assumed that the home topology is up to date - this method will only search for the module status
         of those modules that have been parsed in the topology data.
+
+        Args:
+            input_module_status (dict): Dictionary representing the JSON structure of the home's module status as returned
+                                        by the API.
         """
         # With the modules identified in the module_status information,
         # we update their status into the modules map of this home object
