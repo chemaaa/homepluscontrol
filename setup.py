@@ -26,7 +26,7 @@ setuptools.setup(
     version=homepluscontrol.version,
     author="chemaaa",
     author_email="chemaaar@gmail.com",
-    description="Python-based API to interact with the Legrand Home + Control interface",
+    description="Python-based API to interact with the Netatmo Connect Home + Control interface",
     license="GPLv3",
     long_description=long_description,
     long_description_content_type="text/markdown",
