@@ -13,9 +13,9 @@ def test_base_module_str(test_module):
 
 def test_base_update_status(async_mock_plant):
     mock_plant, loop = async_mock_plant
-    mock_module = mock_plant.modules["0000000587654321fedcba"]
+    mock_module = mock_plant.modules["aa:04:74:00:00:0b:ab:cd"]
 
     status_result = loop.run_until_complete(mock_module.get_status_update())
     assert isinstance(mock_module, homeplusmodule.HomePlusModule)
     assert status_result["reachable"]
-    assert status_result["fw"] is not None
+    assert status_result["firmware_revision"] is not None

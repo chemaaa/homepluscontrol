@@ -12,26 +12,26 @@ def test_automation_module_str(test_automation):
 def test_automation_read_status(async_mock_plant):
     mock_plant, loop = async_mock_plant
 
-    mock_automation = mock_plant.modules["00001234567890000xxxxxxx"]
+    mock_automation = mock_plant.modules["aa:34:56:78:90:00:0c:dd"]
     assert mock_automation.device == "automation"
     assert mock_automation.name == "Volet Cuisine"
     assert mock_automation.hw_type == "NBR"
     assert mock_automation.level == HomePlusAutomation.OPEN_FULL
     assert mock_automation.reachable
-    assert mock_automation.fw == 16
+    assert mock_automation.fw == 59
 
-    mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
+    mock_automation = mock_plant.modules["aa:88:99:43:18:1f:09:76"]
     assert mock_automation.device == "automation"
     assert mock_automation.name == "Volet Chambre"
     assert mock_automation.hw_type == "NBR"
     assert mock_automation.level == HomePlusAutomation.CLOSED_FULL
     assert mock_automation.reachable
-    assert mock_automation.fw == 21
+    assert mock_automation.fw == 57
 
 
 def test_automation_high_level(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
-    mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
+    mock_automation = mock_plant.modules["aa:88:99:43:18:1f:09:76"]
 
     for invalid_level in [101, 1000, 100.1, 901]:
         with patch(
@@ -46,7 +46,7 @@ def test_automation_high_level(async_mock_plant, mock_automation_post):
 
 def test_automation_low_level(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
-    mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
+    mock_automation = mock_plant.modules["aa:88:99:43:18:1f:09:76"]
 
     for invalid_level in [-2, -1.01, -999, -0.1]:
         with patch(
@@ -66,12 +66,12 @@ def test_automation_low_level(async_mock_plant, mock_automation_post):
         loop.run_until_complete(mock_automation.set_level(-1))
 
     assert len(mock_post.mock_calls) == 1
-    assert mock_automation.level == 87  # Value returned by mock "get_status_update" request
+    assert mock_automation.level == 0  # Value returned by mock "get_status_update" request
 
 
 def test_automation_open(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
-    mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
+    mock_automation = mock_plant.modules["aa:88:99:43:18:1f:09:76"]
 
     assert mock_automation.level == HomePlusAutomation.CLOSED_FULL  # Automation is closed
 
@@ -87,7 +87,7 @@ def test_automation_open(async_mock_plant, mock_automation_post):
 
 def test_automation_close(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
-    mock_automation = mock_plant.modules["00001234567890000xxxxxxx"]
+    mock_automation = mock_plant.modules["aa:34:56:78:90:00:0c:dd"]
 
     assert mock_automation.level == HomePlusAutomation.OPEN_FULL  # Automation is open
 
@@ -103,7 +103,7 @@ def test_automation_close(async_mock_plant, mock_automation_post):
 
 def test_automation_stop(async_mock_plant, mock_automation_post):
     mock_plant, loop = async_mock_plant
-    mock_automation = mock_plant.modules["00001234567890001xxxxxxx"]
+    mock_automation = mock_plant.modules["aa:88:99:43:18:1f:09:76"]
 
     assert mock_automation.level == HomePlusAutomation.CLOSED_FULL  # Automation is closed
 
@@ -125,4 +125,4 @@ def test_automation_stop(async_mock_plant, mock_automation_post):
         loop.run_until_complete(mock_automation.stop())
 
     assert len(mock_post.mock_calls) == 1
-    assert mock_automation.level == 87  # Value returned by mock "get_status_update" request
+    assert mock_automation.level == 0  # Value returned by mock "get_status_update" request

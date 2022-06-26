@@ -102,6 +102,7 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
         # Populate the dictionary of homes
         current_home_id = []
         for home in homes_info["homes"]:
+            print(home)
             current_home_id.append(home["id"])
             if home["id"] in self._homes:
                 self.logger.debug(
@@ -116,10 +117,10 @@ class HomePlusControlAPI(AbstractHomePlusOAuth2Async):
                     cur_home.oauth_client = self
             else:
                 self.logger.debug("New home with id %s detected.", home["id"])
-                self._homes[home["id"]] = HomePlusPlant(home["id"], home["name"], home["country"], self)
+                self._homes[home["id"]] = HomePlusPlant(home["id"], home, self)
 
             # Update the module status information in the home - this makes an API call
-            await self._homes[home["id"]].update_topology_and_modules(input_home_data=home)
+            await self._homes[home["id"]].update_home_data_and_modules(input_home_data=home)
 
         # Discard homes that may have disappeared
         homes_to_pop = set(self._homes) - set(current_home_id)

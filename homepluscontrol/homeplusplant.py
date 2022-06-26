@@ -32,7 +32,7 @@ class HomePlusPlant:
         module_status (dict): JSON representation of the home modules' status as returned by the API
     """
 
-    def __init__(self, id, name, country, oauth_client: AbstractHomePlusOAuth2Async):
+    def __init__(self, id, home_data, oauth_client: AbstractHomePlusOAuth2Async):
         """HomePlusPlant Constructor
 
         Args:
@@ -42,12 +42,12 @@ class HomePlusPlant:
             oauth_client (AbstractHomePlusOAuth2Async): Authentication client to make request to the REST API.
         """
         self.id = id
-        self.name = name
-        self.country = country
         self.oauth_client = oauth_client
         self.modules = {}
-        self.topology = json.loads('{"home": { } }')
         self.module_status = json.loads("[ ]")
+
+        self._set_home_data(home_data)
+        self._parse_home_data(home_data)
 
     def __str__(self):
         """Return the string representing this home"""
@@ -58,40 +58,7 @@ class HomePlusPlant:
         """Return logger of the home."""
         return logging.getLogger(__name__)
 
-    async def refresh_topology(self):
-        """Makes a call to the API to refresh the topology information of the home into attribute `topology`.
-        The topology provides information about the homes ambients/rooms and the modules within them.
-
-        At this time, the home topology is only used to extract the module data.
-        TODO: Handle ambients/rooms
-        """
-        try:
-            response = await self.oauth_client.get_request(HOMES_DATA_URL)
-        except aiohttp.ClientResponseError:
-            self.logger.error("HTTP client response error when refreshing homes data")
-        else:
-            response_body = await response.json()
-            for home_data in response_body["body"]["homes"]:
-                if home_data["id"] == self.id:
-                    self.topology = home_data
-
-    async def refresh_module_status(self):
-        """Makes a call to the API to refresh the status of all modules in the home into attribute `module_status`.
-        The module status provides information about the modules current status, eg. reachability,
-        on/off, battery, consumption.
-
-        TODO: Handle consumptions
-        """
-        try:
-            response = await self.oauth_client.get_request(HOMES_STATUS_URL, {"home_id": self.id})
-        except aiohttp.ClientResponseError:
-            self.logger.error("HTTP client response error when refreshing module status")
-        else:
-            response_body = await response.json()
-            print(response_body)
-            self.module_status = response_body["body"]["home"]["modules"]
-
-    async def update_topology(self, input_home_data=None):
+    async def update_home_data(self, input_home_data=None):
         """Convenience method that first refreshes the home's topology information through an API call
         and then parses the modules contained in that topology into the object's inner map.
 
@@ -102,10 +69,14 @@ class HomePlusPlant:
                                     If absent, an API call will be made to obtain this data.
         """
         if input_home_data is None:
-            await self.refresh_topology()
-        self._parse_topology()
+            new_home_data = await self._refresh_home_data()
+        else:
+            new_home_data = input_home_data
 
-    async def update_module_status(self):
+        self._set_home_data(new_home_data)
+        self._parse_home_data(new_home_data)
+
+    async def update_module_status(self, input_module_status=None):
         """Convenience method that first refreshes the information of the modules' status through an API call
         and then parses the status information into the modules of the object's inner map.
 
@@ -113,10 +84,14 @@ class HomePlusPlant:
         present in the home will remain with their last known status, while new modules that may have been added
         to the topology will not be reflected in it just yet.
         """
-        await self.refresh_module_status()
-        self._parse_module_status()
+        if input_module_status is None:
+            new_module_status = await self._refresh_module_status()
+        else:
+            new_module_status = input_module_status
 
-    async def update_topology_and_modules(self, input_home_data=None):
+        self._parse_module_status(new_module_status)
+
+    async def update_home_data_and_modules(self, input_home_data=None, input_module_status=None):
         """Convenience method that first refreshes the home's topology information and then refreshes
         the status of all modules in that topology.
 
@@ -126,19 +101,66 @@ class HomePlusPlant:
             input_home_data (dict): Dictionary representing the JSON structure of the home as returned by the API.
                                     If absent, an API call will be made to obtain this data.
         """
-        if input_home_data is None:
-            await self.refresh_topology()
-        await self.refresh_module_status()
-        self._parse_topology_and_modules()
+        await self.update_home_data(input_home_data)
+        await self.update_module_status(input_module_status)
 
-    def _parse_topology(self):
-        """Auxiliary method to parse the topology data returned by the API.
+    def _set_home_data(self, input_home_data):
+        """Update the home information from the input home data JSON object
 
-        It is assumed that this data has been previously refreshed into the object's attribute: self.topology.
+        Args:
+            input_home_data (dict): Dictionary representing the JSON structure of the home as returned by the API.
+        """
+        self.name = input_home_data.get("name", "UNKNOWN")
+        self.country = input_home_data.get("country", "XX")
+        self.home_data = input_home_data
+
+    async def _refresh_home_data(self):
+        """Makes a call to the API to refresh the information of the home into attribute `topology`.
+        The topology provides information about the homes ambients/rooms and the modules within them.
+
+        At this time, the home topology is only used to extract the module data.
+        TODO: Handle ambients/rooms
+        """
+        new_home_data = self.home_data
+        try:
+            response = await self.oauth_client.get_request(HOMES_DATA_URL)
+        except aiohttp.ClientResponseError:
+            self.logger.error("HTTP client response error when refreshing homes data")
+        else:
+            response_body = await response.json()
+            for home_data in response_body["body"]["homes"]:
+                if home_data["id"] == self.id:
+                    new_home_data = home_data
+                    self.home_data = new_home_data
+        return new_home_data
+
+    async def _refresh_module_status(self):
+        """Makes a call to the API to refresh the status of all modules in the home into attribute `module_status`.
+        The module status provides information about the modules current status, eg. reachability,
+        on/off, battery, consumption.
+
+        TODO: Handle consumptions
+        """
+        new_module_status = self.module_status
+        try:
+            response = await self.oauth_client.get_request(HOMES_STATUS_URL, {"home_id": self.id})
+        except aiohttp.ClientResponseError:
+            self.logger.error("HTTP client response error when refreshing module status")
+        else:
+            response_body = await response.json()
+            new_module_status = response_body["body"]["home"]["modules"]
+            self.module_status = new_module_status
+        return new_module_status
+
+    def _parse_home_data(self, input_home_data):
+        """Auxiliary method to parse the home data returned by the API.
+
+        Args:
+            input_home_data (dict): Dictionary representing the JSON structure of the home as returned by the API.
         """
         # Extract the home's modules from the topology data structure.
         flat_modules = {}
-        for module in self.topology["modules"]:
+        for module in input_home_data.get("modules", []):
             flat_modules[module["id"]] = module
 
         input_module_ids = set(flat_modules)
@@ -154,7 +176,7 @@ class HomePlusPlant:
         for delete_module_id in current_module_ids.difference(input_module_ids):
             self.modules.pop(delete_module_id, None)
 
-    def _parse_module_status(self):
+    def _parse_module_status(self, input_module_status):
         """Auxiliary method to parse the module status data returned by the API.
 
         It is assumed that this data has been previously refreshed into the object's attribute: self.module_status.
@@ -165,7 +187,7 @@ class HomePlusPlant:
         # we update their status into the modules map of this home object
         input_module_ids = set()
 
-        for m_json in self.module_status:
+        for m_json in input_module_status:
             module_id = m_json["id"]
             input_module_ids.add(module_id)
             if module_id in self.modules:
@@ -175,16 +197,6 @@ class HomePlusPlant:
         # and if that is the case, then we mark them as unreachable
         for existing_id in set(self.modules).difference(input_module_ids):
             self.modules[existing_id].reachable = False
-
-    def _parse_topology_and_modules(self):
-        """Auxiliary method that parses the data returned by the API and converts it into a dictionary
-        of modules that is stored in the attribute `modules`.
-        """
-        # Parse the topology first
-        self._parse_topology()
-
-        # Next we update their status from the module_status property
-        self._parse_module_status()
 
     def _create_module(self, input_module):
         """'Factory' method of specific Home+ Control modules depending on their type that adds the new module

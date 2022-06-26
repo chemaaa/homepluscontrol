@@ -19,11 +19,7 @@ def test_error_responses(error_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
     with pytest.raises(Exception) as exc_info:
-        loop.run_until_complete(
-            test_client.get_request(
-                "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-            )
-        )
+        loop.run_until_complete(test_client.get_request("https://api.netatmo.com/api/homesdata"))
 
     assert exc_info.type is ClientResponseError
     assert exc_info.value.status == 400
@@ -34,26 +30,19 @@ def test_error_responses(error_aioresponse, test_client):
 def test_plant_data(mock_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
+    resp = loop.run_until_complete(test_client.get_request("https://api.netatmo.com/api/homesdata"))
+    response_body = loop.run_until_complete(resp.json())
+    plant_info = response_body["body"]
 
     # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
+    p = plant_info["homes"][0]
+    test_plant = homeplusplant.HomePlusPlant(p["id"], p, test_client)
 
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
+    plant_str = "Home+ Home: name->My Home, id->123456789009876543210, country->ES"
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
-    loop.run_until_complete(test_plant.update_topology_and_modules())
+    loop.run_until_complete(test_plant.update_module_status())
     plugs = []
     lights = []
     remotes = []
@@ -68,8 +57,8 @@ def test_plant_data(mock_aioresponse, test_client):
         elif isinstance(mod, homeplusautomation.HomePlusAutomation):
             automations.append(mod)
 
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
+    assert len(test_plant.modules) == 12
+    assert len(plugs) == 4
     assert len(lights) == 2
     assert len(remotes) == 3
     assert len(automations) == 2
@@ -86,13 +75,13 @@ def test_plant_data(mock_aioresponse, test_client):
     for r in remotes:
         assert r.battery == "full"
 
-    # Turn off a plug: 0000000587654321fedcba
-    test_plug = test_plant.modules["0000000587654321fedcba"]
+    # Turn off a plug: aa:87:65:43:21:fe:dc:ba
+    test_plug = test_plant.modules["aa:87:65:43:21:fe:dc:ba"]
     loop.run_until_complete(test_plug.turn_off())
     assert test_plug.status == "off"
 
-    # Turn on a light: 0000000787654321fedcba
-    test_light = test_plant.modules["0000000787654321fedcba"]
+    # Turn on a light: aa:11:11:32:11:ae:df:11
+    test_light = test_plant.modules["aa:11:11:32:11:ae:df:11"]
     loop.run_until_complete(test_light.turn_on())
     assert test_light.status == "on"
 
@@ -101,26 +90,19 @@ def test_plant_data(mock_aioresponse, test_client):
 def test_reducing_plant(mock_reduced_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
+    resp = loop.run_until_complete(test_client.get_request("https://api.netatmo.com/api/homesdata"))
+    response_body = loop.run_until_complete(resp.json())
+    plant_info = response_body["body"]
 
     # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
+    p = plant_info["homes"][0]
+    test_plant = homeplusplant.HomePlusPlant(p["id"], p, test_client)
 
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
+    plant_str = "Home+ Home: name->My Home, id->123456789009876543210, country->ES"
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
-    loop.run_until_complete(test_plant.update_topology_and_modules())
+    loop.run_until_complete(test_plant.update_module_status())
     plugs = []
     lights = []
     remotes = []
@@ -135,32 +117,14 @@ def test_reducing_plant(mock_reduced_aioresponse, test_client):
         elif isinstance(mod, homeplusautomation.HomePlusAutomation):
             automations.append(mod)
 
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
+    assert len(test_plant.modules) == 12
+    assert len(plugs) == 4
     assert len(lights) == 2
     assert len(remotes) == 3
     assert len(automations) == 2
 
     # Now change the topology and assert that the updates are "seen" in the plant object
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
-
-    # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
-
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
-    assert test_plant.__str__() == plant_str
-    # Read the modules into arrays
-    loop.run_until_complete(test_plant.update_topology_and_modules())
+    loop.run_until_complete(test_plant.update_home_data_and_modules())
     plugs = []
     lights = []
     remotes = []
@@ -175,39 +139,32 @@ def test_reducing_plant(mock_reduced_aioresponse, test_client):
         elif isinstance(mod, homeplusautomation.HomePlusAutomation):
             automations.append(mod)
 
-    # Reduced topology has 3 modules fewer - one plug, one remote and one automation have been removed
-    assert len(test_plant.modules) == 7
-    assert len(plugs) == 2
-    assert len(lights) == 2
+    # Reduced topology has 4 modules fewer - one plug, one remote, one light and one automation have been removed
+    assert len(test_plant.modules) == 8
+    assert len(plugs) == 3
+    assert len(lights) == 1
     assert len(remotes) == 2
     assert len(automations) == 1
 
 
-# Topology loses a couple of modules, but we only refresh the module status
+# Topology remains the same, but we lose some of the modules' status
 # The missing modules should change their reachability to False
 def test_reducing_module_status(mock_reduced_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
+    resp = loop.run_until_complete(test_client.get_request("https://api.netatmo.com/api/homesdata"))
+    response_body = loop.run_until_complete(resp.json())
+    plant_info = response_body["body"]
 
     # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
+    p = plant_info["homes"][0]
+    test_plant = homeplusplant.HomePlusPlant(p["id"], p, test_client)
 
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
+    plant_str = "Home+ Home: name->My Home, id->123456789009876543210, country->ES"
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
-    loop.run_until_complete(test_plant.update_topology_and_modules())
+    loop.run_until_complete(test_plant.update_module_status())
     plugs = []
     lights = []
     remotes = []
@@ -222,15 +179,15 @@ def test_reducing_module_status(mock_reduced_aioresponse, test_client):
         elif isinstance(mod, homeplusautomation.HomePlusAutomation):
             automations.append(mod)
 
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
+    assert len(test_plant.modules) == 12
+    assert len(plugs) == 4
     assert len(lights) == 2
     assert len(remotes) == 3
     assert len(automations) == 2
 
-    missing_plug = test_plant.modules["0000000987654321fedcba"]
-    missing_remote = test_plant.modules["000000032345678abcdef"]
-    missing_automation = test_plant.modules["00001234567890000xxxxxxx"]
+    missing_plug = test_plant.modules["aa:34:ab:f3:ff:4e:22:b1"]
+    missing_remote = test_plant.modules["aa:45:21:aa:1b:fc:bd:da"]
+    missing_automation = test_plant.modules["aa:88:99:43:18:1f:09:76"]
     assert missing_plug.reachable
     assert missing_remote.reachable
     assert missing_automation.reachable
@@ -255,8 +212,8 @@ def test_reducing_module_status(mock_reduced_aioresponse, test_client):
     # Reduced topology has 3 modules fewer - one plug, one remote and one automation have been removed
     # But we have not updated the topology in the plant object, only the module status has been refreshed
     # So number of modules should be the same...
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
+    assert len(test_plant.modules) == 12
+    assert len(plugs) == 4
     assert len(lights) == 2
     assert len(remotes) == 3
     assert len(automations) == 2
@@ -271,26 +228,19 @@ def test_reducing_module_status(mock_reduced_aioresponse, test_client):
 def test_growing_plant(mock_growing_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
+    resp = loop.run_until_complete(test_client.get_request("https://api.netatmo.com/api/homesdata"))
+    response_body = loop.run_until_complete(resp.json())
+    plant_info = response_body["body"]
 
     # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
+    p = plant_info["homes"][0]
+    test_plant = homeplusplant.HomePlusPlant(p["id"], p, test_client)
 
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
+    plant_str = "Home+ Home: name->My Home, id->123456789009876543210, country->ES"
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
-    loop.run_until_complete(test_plant.update_topology_and_modules())
+    loop.run_until_complete(test_plant.update_module_status())
     plugs = []
     lights = []
     remotes = []
@@ -305,32 +255,15 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
         elif isinstance(mod, homeplusautomation.HomePlusAutomation):
             automations.append(mod)
 
-    assert len(test_plant.modules) == 7
-    assert len(plugs) == 2
-    assert len(lights) == 2
+    assert len(test_plant.modules) == 8
+    assert len(plugs) == 3
+    assert len(lights) == 1
     assert len(remotes) == 2
     assert len(automations) == 1
 
     # Now change the topology and assert that the updates are "seen" in the plant object
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
-
-    # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
-
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
-    assert test_plant.__str__() == plant_str
     # Read the modules into arrays
-    loop.run_until_complete(test_plant.update_topology_and_modules())
+    loop.run_until_complete(test_plant.update_home_data_and_modules())
     plugs = []
     lights = []
     remotes = []
@@ -345,39 +278,32 @@ def test_growing_plant(mock_growing_aioresponse, test_client):
         elif isinstance(mod, homeplusautomation.HomePlusAutomation):
             automations.append(mod)
 
-    # Increased topology has 3 modules more - one plug, one remote and one automation have been added
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
+    # Increased topology has 4 modules more - one plug, one remote, one light and one automation have been added
+    assert len(test_plant.modules) == 12
+    assert len(plugs) == 4
     assert len(lights) == 2
     assert len(remotes) == 3
     assert len(automations) == 2
 
 
-# Topology gains a couple of modules, but we only refresh the module status
+# Topology gains a couple of modules, but they do not have module status
 # The missing modules should change their reachability to False
-def test_increasing_module_status(mock_growing_aioresponse, test_client):
+def test_increasing_module_status(mock_growing_plant_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
+    resp = loop.run_until_complete(test_client.get_request("https://api.netatmo.com/api/homesdata"))
+    response_body = loop.run_until_complete(resp.json())
+    plant_info = response_body["body"]
 
     # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
+    p = plant_info["homes"][0]
+    test_plant = homeplusplant.HomePlusPlant(p["id"], p, test_client)
 
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
+    plant_str = "Home+ Home: name->My Home, id->123456789009876543210, country->ES"
     assert test_plant.__str__() == plant_str
 
     # Read the modules into arrays
-    loop.run_until_complete(test_plant.update_topology_and_modules())
+    loop.run_until_complete(test_plant.update_module_status())
     plugs = []
     lights = []
     remotes = []
@@ -392,22 +318,22 @@ def test_increasing_module_status(mock_growing_aioresponse, test_client):
         elif isinstance(mod, homeplusautomation.HomePlusAutomation):
             automations.append(mod)
 
-    assert len(test_plant.modules) == 7
-    assert len(plugs) == 2
-    assert len(lights) == 2
+    assert len(test_plant.modules) == 8
+    assert len(plugs) == 3
+    assert len(lights) == 1
     assert len(remotes) == 2
     assert len(automations) == 1
 
-    new_plug = test_plant.modules.get("0000000987654321fedcba", None)
-    new_remote = test_plant.modules.get("000000032345678abcdef", None)
-    new_automation = test_plant.modules.get("00001234567890000xxxxxxx", None)
+    new_plug = test_plant.modules.get("aa:34:ab:f3:ff:4e:22:b1", None)
+    new_remote = test_plant.modules.get("aa:45:21:aa:1b:fc:bd:da", None)
+    new_automation = test_plant.modules.get("aa:88:99:43:18:1f:09:76", None)
     assert new_plug is None
     assert new_remote is None
     assert new_automation is None
 
     # Now change the topology and assert that the updates are "seen" in the plant object
     # Read the modules into arrays
-    loop.run_until_complete(test_plant.update_topology())
+    loop.run_until_complete(test_plant.update_home_data_and_modules())
     plugs = []
     lights = []
     remotes = []
@@ -425,16 +351,16 @@ def test_increasing_module_status(mock_growing_aioresponse, test_client):
     # Increased topology has 3 modules more - one plug, one remote and one automation have been added.
     # We have only updated the topology and not the module status, so by default, the new modules should be unreachable
     # Number of modules grows...
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
+    assert len(test_plant.modules) == 12
+    assert len(plugs) == 4
     assert len(lights) == 2
     assert len(remotes) == 3
     assert len(automations) == 2
 
     # But we should see that the new modules are unreachable
-    new_plug = test_plant.modules.get("0000000987654321fedcba", None)
-    new_remote = test_plant.modules.get("000000032345678abcdef", None)
-    new_automation = test_plant.modules.get("00001234567890000xxxxxxx", None)
+    new_plug = test_plant.modules.get("aa:34:ab:f3:ff:4e:22:b1", None)
+    new_remote = test_plant.modules.get("aa:45:21:aa:1b:fc:bd:da", None)
+    new_automation = test_plant.modules.get("aa:88:99:43:18:1f:09:76", None)
     assert not new_plug.reachable
     assert not new_remote.reachable
     assert not new_automation.reachable
@@ -446,138 +372,22 @@ def test_increasing_module_status(mock_growing_aioresponse, test_client):
     assert new_automation.reachable
 
 
-# Test a case where we update module status before topology
-def test_plant_data_ordering(mock_aioresponse, test_client):
-    loop = asyncio.get_event_loop()
-
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
-
-    # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
-
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
-    assert test_plant.__str__() == plant_str
-
-    # Read the modules status, but we have no topology!!
-    loop.run_until_complete(test_plant.update_module_status())
-    assert len(test_plant.modules) == 0
-
-    # Now read the topology
-    loop.run_until_complete(test_plant.update_topology())
-    plugs = []
-    lights = []
-    remotes = []
-    automations = []
-    for mod in test_plant.modules.values():
-        if isinstance(mod, homeplusplug.HomePlusPlug):
-            plugs.append(mod)
-        elif isinstance(mod, homepluslight.HomePlusLight):
-            lights.append(mod)
-        elif isinstance(mod, homeplusremote.HomePlusRemote):
-            remotes.append(mod)
-        elif isinstance(mod, homeplusautomation.HomePlusAutomation):
-            automations.append(mod)
-
-    # Modules are there, but they are all unreachable
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
-    assert len(lights) == 2
-    assert len(remotes) == 3
-    assert len(automations) == 2
-
-    for mod in test_plant.modules.values():
-        assert not mod.reachable
-
-    # So we read the status to fix the situation
-    loop.run_until_complete(test_plant.update_module_status())
-    plugs = []
-    lights = []
-    remotes = []
-    automations = []
-    for mod in test_plant.modules.values():
-        if isinstance(mod, homeplusplug.HomePlusPlug):
-            plugs.append(mod)
-        elif isinstance(mod, homepluslight.HomePlusLight):
-            lights.append(mod)
-        elif isinstance(mod, homeplusremote.HomePlusRemote):
-            remotes.append(mod)
-        elif isinstance(mod, homeplusautomation.HomePlusAutomation):
-            automations.append(mod)
-
-    # Modules are still there
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
-    assert len(lights) == 2
-    assert len(remotes) == 3
-    assert len(automations) == 2
-
-    # And are reachable (or whatever their test data says - 000000012345678abcdef is unreachable in the test data)
-    for mod in test_plant.modules.values():
-        if mod.id == "000000012345678abcdef":
-            assert not mod.reachable
-        else:
-            assert mod.reachable
-
-
 # Test a case where we get an HTTP error while updating the module status
 def test_plant_partial_error(partial_error_aioresponse, test_client):
     loop = asyncio.get_event_loop()
 
-    resp = loop.run_until_complete(
-        test_client.get_request(
-            "https://api.developer.legrand.com/hc/api/v1.0/plants/"
-        )
-    )
-    plant_info = loop.run_until_complete(resp.json())
+    resp = loop.run_until_complete(test_client.get_request("https://api.netatmo.com/api/homesdata"))
+    response_body = loop.run_until_complete(resp.json())
+    plant_info = response_body["body"]
 
     # Retrieve the first and only plant in the response
-    p = plant_info["plants"][0]
-    test_plant = homeplusplant.HomePlusPlant(
-        p["id"], p["name"], p["country"], test_client
-    )
+    p = plant_info["homes"][0]
+    test_plant = homeplusplant.HomePlusPlant(p["id"], p, test_client)
 
-    plant_str = (
-        "Home+ Plant: name->My Home, id->123456789009876543210, country->ES"
-    )
+    plant_str = "Home+ Home: name->My Home, id->123456789009876543210, country->ES"
     assert test_plant.__str__() == plant_str
 
-    # Now read the topology
-    loop.run_until_complete(test_plant.update_topology())
-    plugs = []
-    lights = []
-    remotes = []
-    automations = []
-    for mod in test_plant.modules.values():
-        if isinstance(mod, homeplusplug.HomePlusPlug):
-            plugs.append(mod)
-        elif isinstance(mod, homepluslight.HomePlusLight):
-            lights.append(mod)
-        elif isinstance(mod, homeplusremote.HomePlusRemote):
-            remotes.append(mod)
-        elif isinstance(mod, homeplusautomation.HomePlusAutomation):
-            automations.append(mod)
-
-    # Modules are there, but they are all unreachable
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
-    assert len(lights) == 2
-    assert len(remotes) == 3
-    assert len(automations) == 2
-
-    for mod in test_plant.modules.values():
-        assert not mod.reachable
-
-    # Now we read the status, but this returns error
+    # Now read the module status, but it fails with an HTTP error
     loop.run_until_complete(test_plant.update_module_status())
     plugs = []
     lights = []
@@ -593,13 +403,39 @@ def test_plant_partial_error(partial_error_aioresponse, test_client):
         elif isinstance(mod, homeplusautomation.HomePlusAutomation):
             automations.append(mod)
 
-    # Modules are still there
-    assert len(test_plant.modules) == 10
-    assert len(plugs) == 3
+    # Modules are there, but they are all unreachable
+    assert len(test_plant.modules) == 12
+    assert len(plugs) == 4
     assert len(lights) == 2
     assert len(remotes) == 3
     assert len(automations) == 2
 
-    # But remain unreachable
     for mod in test_plant.modules.values():
         assert not mod.reachable
+
+    # Now we re-read home data and module status to fix the situation
+    loop.run_until_complete(test_plant.update_home_data_and_modules())
+    plugs = []
+    lights = []
+    remotes = []
+    automations = []
+    for mod in test_plant.modules.values():
+        if isinstance(mod, homeplusplug.HomePlusPlug):
+            plugs.append(mod)
+        elif isinstance(mod, homepluslight.HomePlusLight):
+            lights.append(mod)
+        elif isinstance(mod, homeplusremote.HomePlusRemote):
+            remotes.append(mod)
+        elif isinstance(mod, homeplusautomation.HomePlusAutomation):
+            automations.append(mod)
+
+    # Modules are still there
+    assert len(test_plant.modules) == 12
+    assert len(plugs) == 4
+    assert len(lights) == 2
+    assert len(remotes) == 3
+    assert len(automations) == 2
+
+    # And are now reachable
+    for mod in test_plant.modules.values():
+        assert mod.reachable
