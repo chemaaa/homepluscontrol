@@ -66,7 +66,6 @@ api_home_data_url = "https://api.netatmo.com/api/homesdata"
 # process and the authenticated requests
 client = authentication.HomePlusOAuth2Async(client_id,
                                             client_secret,
-                                            subscription_key,
                                             token=dummy_token,
                                             redirect_uri=redirect_uri)
 

@@ -30,7 +30,6 @@ The following script is a simple example of how this Python library can be used:
     # process and the authenticated requests
     client = authentication.HomePlusOAuth2Async(client_id,
                                                 client_secret,
-                                                subscription_key,
                                                 token=dummy_token,
                                                 redirect_uri=redirect_uri)
 
