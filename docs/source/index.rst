@@ -8,7 +8,7 @@
 Documentation of Home + Control by Legrand
 ==========================================
 
-**Legrand has deprecated the _Legrand Home + Control_ API and migrated to the _Netatmo Connect_ platform. This library has been updated to support the new _Netatmo Connect_ API.**
+**Legrand has deprecated the Legrand Home + Control API and migrated to the Netatmo Connect platform. This library has been updated to support the new Netatmo Connect API.**
 
 This is a basic Python library that interacts with the *Netatmo Connect Home + Control* API. It is 
 primarily intended for integration into Smart Home platforms such as Home Assistant.
