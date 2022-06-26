@@ -59,11 +59,11 @@ class AbstractHomePlusOAuth2Async(ABC):
         if "headers" in kwargs:
             kwargs["headers"] = {
                 **kwargs["headers"],
-                "Authorization": f"Bearer {access_token['access_token']}",
+                "Authorization": f"Bearer {access_token}",
             }
         else:
             kwargs["headers"] = {
-                "Authorization": f"Bearer {access_token['access_token']}",
+                "Authorization": f"Bearer {access_token}",
             }
 
         return await self.oauth_client.request(method, url, **kwargs)
@@ -286,14 +286,14 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
             dict: Token dictionary with the new access token and
             expiration times
         """
-        new_token = await self._token_request(
+        await self._token_request(
             {
                 "grant_type": "refresh_token",
                 "client_id": self.client_id,
                 "refresh_token": token["refresh_token"],
             }
         )
-        return {**token, **new_token}
+        return self.token["access_token"]
 
     async def _token_request(self, data: dict) -> dict:
         """Make an HTTP POST request for a token.
@@ -367,9 +367,10 @@ class HomePlusOAuth2Async(AbstractHomePlusOAuth2Async):
                  that holds the token is also updated.
         """
         if self.valid_token:
-            self.logger.debug("Token is still valid")
-            return self.token
-        self.logger.debug("Token is no longer valid so refreshing")
+            self.logger.debug("Token is still valid: %s", self.token)
+            return self.token["access_token"]
+
+        self.logger.debug("Token is no longer valid so refreshing: %s", self.token)
         return await self._async_refresh_token(self.token)
 
     async def async_fetch_initial_token(self, redirect_url: Any) -> dict:
