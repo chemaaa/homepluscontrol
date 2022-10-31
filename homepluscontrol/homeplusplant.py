@@ -226,7 +226,7 @@ class HomePlusPlant:
             plant=self,
             id=input_module["id"],
             device=module_product_type,
-            name=input_module["name"],
+            name=input_module.get("name", "Unknown"),
             hw_type=input_module["type"],
             type=input_module.get("appliance_type"),
             bridge=input_module.get("bridge"),
